@@ -58,8 +58,6 @@ public interface ModConfig {
 
     boolean shouldPreventInteractions();
 
-    boolean allowInteractionsFromCamera();
-
     boolean allowInteractionsFromPlayer();
 
     boolean isRestrictedOnServer(String serverIp);
