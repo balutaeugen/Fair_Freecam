@@ -13,14 +13,13 @@ import java.util.List;
 public class ModConfigDTO implements MCAwareModConfig, RawJsonHolder {
 
     private transient @Nullable JsonObject rawJson;
-    private transient CollisionPredicate collisionPredicate;
 
     public ModConfigDTO() {
         onConfigChange();
     }
 
     public void onConfigChange() {
-        collisionPredicate = CollisionPredicate.create(collision);
+
     }
 
     @Override
@@ -50,17 +49,17 @@ public class ModConfigDTO implements MCAwareModConfig, RawJsonHolder {
 
     @Override
     public boolean ignoreAllCollision() {
-        return collision.ignoreAll;
+        return false;
     }
 
     @Override
     public boolean shouldCheckInitialCollision() {
-        return collision.alwaysCheck || !collision.ignoreAll;
+        return true;
     }
 
     @Override
     public boolean ignoreCollisionWith(Block block) {
-        return collision.ignoreAll || collisionPredicate.shouldIgnore(block);
+        return false;
     }
 
     @Override
@@ -80,7 +79,7 @@ public class ModConfigDTO implements MCAwareModConfig, RawJsonHolder {
 
     @Override
     public boolean isFullBrightEnabled() {
-        return visual.fullBright;
+        return false;
     }
 
     @Override
@@ -100,21 +99,12 @@ public class ModConfigDTO implements MCAwareModConfig, RawJsonHolder {
 
     @Override
     public boolean shouldPreventInteractions() {
-        return !utility.allowInteract;
-    }
-
-    public boolean allowInteractionsFrom(InteractionMode mode) {
-        return utility.allowInteract && utility.interactionMode == mode;
-    }
-
-    @Override
-    public boolean allowInteractionsFromCamera() {
-        return allowInteractionsFrom(InteractionMode.CAMERA);
+        return true;
     }
 
     @Override
     public boolean allowInteractionsFromPlayer() {
-        return allowInteractionsFrom(InteractionMode.PLAYER);
+        return false;
     }
 
     @Override
