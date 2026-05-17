@@ -1,8 +1,8 @@
 [key.category.freecam]
-controls = "Freecam"
+controls = "Fair Freecam"
 
 [key.freecam]
-toggle = "Alternar Freecam"
+toggle = "Alternar Fair Freecam"
 
   [key.freecam.controlPlayer]
   toggle = "Controlar Jugador"

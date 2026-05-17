@@ -1,6 +1,6 @@
 [freecam.msg]
 enabled = "Свободная камера включена."
-disabled = "Freecam выключен."
+disabled = "Fair Freecam выключен."
 invalidRegex = "Недопустимое регулярное выражение: %s"
 
   [freecam.msg.tripod]
