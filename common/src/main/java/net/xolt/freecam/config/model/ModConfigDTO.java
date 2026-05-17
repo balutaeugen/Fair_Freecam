@@ -48,21 +48,6 @@ public class ModConfigDTO implements MCAwareModConfig, RawJsonHolder {
     }
 
     @Override
-    public boolean ignoreAllCollision() {
-        return false;
-    }
-
-    @Override
-    public boolean shouldCheckInitialCollision() {
-        return true;
-    }
-
-    @Override
-    public boolean ignoreCollisionWith(Block block) {
-        return false;
-    }
-
-    @Override
     public Perspective getInitialPerspective() {
         return visual.perspective;
     }
@@ -148,22 +133,6 @@ public class ModConfigDTO implements MCAwareModConfig, RawJsonHolder {
         public FlightMode flightMode = FlightMode.DEFAULT;
         public double horizontalSpeed = 1.0;
         public double verticalSpeed = 1.0;
-    }
-
-    public CollisionConfig collision = new CollisionConfig();
-    public static class CollisionConfig {
-        public boolean ignoreTransparent = false;
-        public boolean ignoreOpenable = false;
-        public boolean ignoreCustom = false;
-
-        public CollisionWhitelist whitelist = new CollisionWhitelist();
-        public static class CollisionWhitelist {
-            public List<String> ids = new ArrayList<>();
-            public List<String> patterns = new ArrayList<>();
-        }
-
-        public boolean ignoreAll = true;
-        public boolean alwaysCheck = false;
     }
 
     public VisualConfig visual = new VisualConfig();
