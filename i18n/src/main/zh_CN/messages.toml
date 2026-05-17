@@ -1,6 +1,6 @@
 [freecam.msg]
-enabled = "Freecam 角已经启用。"
-disabled = "Freecam 角已经禁用。"
+enabled = "Fair Freecam 角已经启用。"
+disabled = "Fair Freecam 角已经禁用。"
 invalidRegex = "无效的正则表达式：%s"
 
   [freecam.msg.tripod]

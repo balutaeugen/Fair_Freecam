@@ -110,6 +110,34 @@ tasks.generateReleaseMetadata {
     dependsOn(gradle.includedBuild("changelog").task(":getReleaseNotes"))
 }
 
+tasks.register("chiseledBuild") {
+    group = "project"
+    dependsOn(stonecutter.tasks.named("build"))
+
+    doLast {
+        val artifactsDir = rootProject.layout.projectDirectory.dir("artifacts").asFile
+        artifactsDir.deleteRecursively()
+        artifactsDir.mkdirs()
+
+        for (node in stonecutter.tree.nodes) {
+            val loader = node.branch.id
+            // Only collect from loader subprojects, skip common/cloth-config
+            if (loader in setOf("common", "cloth-config", "")) continue
+
+            val mcVersion = node.metadata.version
+            val libsDir = node.project.layout.buildDirectory.dir("libs").get().asFile
+            if (!libsDir.exists()) continue
+
+            val dest = File(artifactsDir, "$mcVersion/$loader")
+            dest.mkdirs()
+
+            libsDir.listFiles()
+                ?.filter { it.extension == "jar" && "-dev" !in it.name }
+                ?.forEach { it.copyTo(File(dest, it.name), overwrite = true) }
+        }
+    }
+}
+
 tasks.named<Wrapper>("wrapper") {
     // Use "all" so we get sources and javadoc too
     distributionType = Wrapper.DistributionType.ALL

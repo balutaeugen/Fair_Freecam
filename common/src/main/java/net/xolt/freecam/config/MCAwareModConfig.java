@@ -13,6 +13,4 @@ public interface MCAwareModConfig extends ModConfig {
         return ConfigControllerRegistry.get(ModConfigDTO.class).getConfig();
     }
 
-    // FIXME: interface should not use MC classes
-    boolean ignoreCollisionWith(Block block);
 }

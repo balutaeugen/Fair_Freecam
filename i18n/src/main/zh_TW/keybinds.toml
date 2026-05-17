@@ -1,8 +1,8 @@
 [key.category.freecam]
-controls = "Freecam"
+controls = "Fair Freecam"
 
 [key.freecam]
-toggle = "切換 Freecam"
+toggle = "切換 Fair Freecam"
 
   [key.freecam.controlPlayer]
   toggle = "控制玩家"

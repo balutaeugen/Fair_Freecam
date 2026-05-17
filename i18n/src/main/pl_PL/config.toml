@@ -1,12 +1,12 @@
 [freecam.config.gui]
-title = "Opcje Freecam"
+title = "Opcje Fair Freecam"
 
   [freecam.config.gui.fallback]
   title = "Config GUI not available."
 
 [freecam.config.controls]
 label = "Przypisania Klawiszy"
-tooltip = "Przypisania klawiszy Freecam."
+tooltip = "Przypisania klawiszy Fair Freecam."
 
 [freecam.config.movement]
 label = "Opcje Ruchu"
@@ -28,42 +28,6 @@ tooltip = "Jak porusza się kamera."
     [freecam.config.movement.speed.vertical]
     label = "Prędkość pionowa"
     tooltip = "Pionowa prędkość wolnej kamery."
-
-[freecam.config.collision]
-label = "Opcje kolizji"
-tooltip = "Przez które bloki możesz przechodzić w wolnej kamerze."
-
-  [freecam.config.collision.ignoreAll]
-  label = "Ignoruj wszystkie kolizje"
-  "tooltip[0]" = "Umożliwia podróżowanie przez wszystkie bloki w wolnej kamerze."
-  "tooltip[1]" = "§eNadpisuje powyższe ustawienia."
-
-  [freecam.config.collision.ignoreTransparent]
-  label = "Ignoruj Przezroczyste Bloki"
-  tooltip = "Umożliwia podróżowanie przez przezroczyste bloki w wolnej kamerze."
-
-  [freecam.config.collision.ignoreOpenable]
-  label = "Ignoruj Otwierane Bloki"
-  tooltip = "Umożliwia przemieszczanie się przez drzwi/klapki/furtki w trybie freecam."
-
-  [freecam.config.collision.ignoreCustom]
-  label = "Niestandardowa Lista Ignorowania"
-  tooltip = "Umożliwia przemieszczanie się przez określone bloki w trybie freecam."
-
-[freecam.config.collision.whitelist.ids]
-label = "Ignoruj identyfikatory"
-"tooltip[0]" = 'Użyj identyfikatora bloku, np. "grass_block".'
-"tooltip[1]" = 'Jeżeli nie została podana przestrzeń nazw, domyślnie: "minecraft:".'
-
-[freecam.config.collision.whitelist.patterns]
-label = "Ignoruj wyrażenia regularne (RegEx)"
-"tooltip[0]" = "Użyj składni wyrażeń regularnych (RegEx)."
-"tooltip[1]" = 'Porównywane z pełnym identyfikatorem bloku, np. "minecraft:grass_block".'
-
-  [freecam.config.collision.alwaysCheck]
-  label = "Zawsze Sprawdzaj Początkową Kolizję"
-  "tooltip[0]" = "Czy §7perspektywa początkowa§r powinna być sprawdzana"
-  "tooltip[1]" = "kolizja, nawet podczas używania §7Ignoruj wszystkie kolizje§r."
 
 [freecam.config.visual]
 label = "Opcje wizualne"

@@ -1,12 +1,12 @@
 [freecam.config.gui]
-title = "Ajustes do Freecam"
+title = "Ajustes do Fair Freecam"
 
   [freecam.config.gui.fallback]
   title = "Config GUI not available."
 
 [freecam.config.controls]
 label = "Atalhos"
-tooltip = "Atalhos do Freecam"
+tooltip = "Atalhos do Fair Freecam"
 
 [freecam.config.movement]
 label = "Opções de movimento"
@@ -29,45 +29,9 @@ tooltip = "Como a câmera se movimenta."
     label = "Velocidade vertical"
     tooltip = "A velocidade vertical da câmera."
 
-[freecam.config.collision]
-label = "Opções de colisão"
-tooltip = "Em quais blocos é possível atravessar no freecam"
-
-  [freecam.config.collision.ignoreAll]
-  label = "Ignorar colisões"
-  "tooltip[0]" = "Permitir atravessar tudo no freecam."
-  "tooltip[1]" = "§eSubstitui opções superiores."
-
-  [freecam.config.collision.ignoreTransparent]
-  label = "Ignorar blocos ausentes"
-  tooltip = "Permite atravessar blocos ausentes no freecam."
-
-  [freecam.config.collision.ignoreOpenable]
-  label = "Ignorar blocos abríveis"
-  tooltip = "Permite atravessar portas, alçapões e portões no freecam"
-
-  [freecam.config.collision.ignoreCustom]
-  label = "Lista personalizada"
-  tooltip = "Permite atravessar certos blocos no freecam."
-
-[freecam.config.collision.whitelist.ids]
-label = "Ignorar IDs"
-"tooltip[0]" = 'Use o id, do bloco. (ex: "grass_block").'
-"tooltip[1]" = 'Se o espaço for omisso, utiliza-se "minecraft:".'
-
-[freecam.config.collision.whitelist.patterns]
-label = "Ignorar expressões regulares"
-"tooltip[0]" = "Usa a sintaxe de expressões regulares"
-"tooltip[1]" = 'Correspondido ao id completo do bloco. (ex: "minecraft:grass_block")'
-
-  [freecam.config.collision.alwaysCheck]
-  label = "Sempre conferir a colisão inicial"
-  "tooltip[0]" = "Quando a §7Perspectiva inicial§r deve ser verificada"
-  "tooltip[1]" = "colisão, mesmo se §7Ignorar colisões§r for usado."
-
 [freecam.config.visual]
 label = "Opções visuais"
-tooltip = "O estilo do Freecam"
+tooltip = "O estilo do Fair Freecam"
 
   [freecam.config.visual.perspective]
   label = "Perspectiva inicial"
@@ -140,7 +104,7 @@ label = "Ajustes de notificação"
 tooltip = "Exibe ou oculta as notificações."
 
   [freecam.config.notification.freecam]
-  label = "Notificações do Freecam"
+  label = "Notificações do Fair Freecam"
   tooltip = "Notifica-o ao entrar/sair do freecam."
 
   [freecam.config.notification.tripod]

@@ -1,12 +1,12 @@
 [freecam.config.gui]
-title = "Definições do Freecam"
+title = "Definições do Fair Freecam"
 
   [freecam.config.gui.fallback]
   title = "Config GUI not available."
 
 [freecam.config.controls]
 label = "Atalhos"
-tooltip = "Atalhos do Freecam"
+tooltip = "Atalhos do Fair Freecam"
 
 [freecam.config.movement]
 label = "Definições de Movimento"
@@ -14,7 +14,7 @@ tooltip = "Como a câmara desloca-se."
 
   [freecam.config.movement.flightMode]
   label = "Modo de Voo"
-  tooltip = "O modo de voo utilizado pelo Freecam."
+  tooltip = "O modo de voo utilizado pelo Fair Freecam."
   DEFAULT = "Padrão"
   CREATIVE = "Criativo"
 
@@ -29,45 +29,9 @@ tooltip = "Como a câmara desloca-se."
     label = "Velocidade Vertical"
     tooltip = "A velocidade vertical da câmara."
 
-[freecam.config.collision]
-label = "Definições de Colisão"
-tooltip = "Em quais blocos é possível atravessar no freecam"
-
-  [freecam.config.collision.ignoreAll]
-  label = "Ignorar todas as colisões"
-  "tooltip[0]" = "Permite atravessar todos os blocos no freecam."
-  "tooltip[1]" = "Sobrepõe todas as definições."
-
-  [freecam.config.collision.ignoreTransparent]
-  label = "Ignorar Blocos Invisíveis"
-  tooltip = "Permite atravessar blocos invisíveis no freecam."
-
-  [freecam.config.collision.ignoreOpenable]
-  label = "Ignorar Blocos com Interação"
-  tooltip = "Permite atravessar portas, alçapões e portões no freecam."
-
-  [freecam.config.collision.ignoreCustom]
-  label = "Lista Personalizada"
-  tooltip = "Permite atravessar alguns blocos no freecam."
-
-[freecam.config.collision.whitelist.ids]
-label = "Ignorar Identificadores"
-"tooltip[0]" = 'Usar Identificador, em exemplo, "grass_block".'
-"tooltip[1]" = 'Se o espaço de nomes for omitido, "Minecraft: " será assumido.'
-
-[freecam.config.collision.whitelist.patterns]
-label = "Ignorar Expressões Regulares"
-"tooltip[0]" = "Use a sintaxe de expressão regular."
-"tooltip[1]" = 'Correspondência pelo ID completo do bloco, exemplo: "Minecraft:grass_block".'
-
-  [freecam.config.collision.alwaysCheck]
-  label = "Sempre Verificar a Colisão Inicial"
-  "tooltip[0]" = "Se a §7Perspetiva inicial§r deve ser verificada"
-  "tooltip[1]" = "colisão, mesmo se utilizar §7Ignorar as Colisões§r."
-
 [freecam.config.visual]
 label = "Ajustes Visuais"
-tooltip = "O visual do Freecam."
+tooltip = "O visual do Fair Freecam."
 
   [freecam.config.visual.perspective]
   label = "Perspetiva Inicial"
@@ -83,11 +47,11 @@ tooltip = "O visual do Freecam."
 
   [freecam.config.visual.showHand]
   label = "Mostrar a Mão"
-  tooltip = "Se pode ver a sua mão no Freecam."
+  tooltip = "Se pode ver a sua mão no Fair Freecam."
 
   [freecam.config.visual.fullBright]
   label = "Brilho Total"
-  tooltip = "Aumenta o brilho no Freecam."
+  tooltip = "Aumenta o brilho no Fair Freecam."
 
   [freecam.config.visual.showSubmersionFog]
   label = "Mostrar Neblina ao Submergir-se"
@@ -95,7 +59,7 @@ tooltip = "O visual do Freecam."
 
 [freecam.config.utility]
 label = "Utilidades"
-tooltip = "Reajustes no Freecam."
+tooltip = "Reajustes no Fair Freecam."
 
   [freecam.config.utility.disableOnDamage]
   label = "Desativar ao receber Dano"
@@ -140,7 +104,7 @@ label = "Notification Options"
 tooltip = "Show or hide notifications."
 
   [freecam.config.notification.freecam]
-  label = "Freecam Notifications"
+  label = "Fair Freecam Notifications"
   tooltip = "Notifies you when entering/exiting freecam."
 
   [freecam.config.notification.tripod]

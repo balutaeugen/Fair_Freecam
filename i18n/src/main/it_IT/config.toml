@@ -29,42 +29,6 @@ tooltip = "Come si muove la telecamera."
     label = "Velocità Verticale"
     tooltip = "La velocità verticale della Camera libera."
 
-[freecam.config.collision]
-label = "Opzioni di Collisione"
-tooltip = "Quali blocchi puoi attraversare nella Camera libera."
-
-  [freecam.config.collision.ignoreAll]
-  label = "Ignora Tutte le Collisioni"
-  "tooltip[0]" = "Consente di viaggiare attraverso tutti i blocchi nella Camera libera."
-  "tooltip[1]" = "§eSostituisce le impostazioni precedenti."
-
-  [freecam.config.collision.ignoreTransparent]
-  label = "Ignora Blocchi Trasparenti"
-  tooltip = "Consente di viaggiare attraverso blocchi trasparenti nella Camera libera."
-
-  [freecam.config.collision.ignoreOpenable]
-  label = "Ignora i Blocchi Apribili"
-  tooltip = "Consente di attraversare porte/botole/cancelli nella Camera libera."
-
-  [freecam.config.collision.ignoreCustom]
-  label = "Elenco Personalizzato Ignorato"
-  tooltip = "Consente di viaggiare attraverso blocchi specifici della Camera libera."
-
-[freecam.config.collision.whitelist.ids]
-label = "Ignora ID"
-"tooltip[0]" = 'Usa blocco id, es. "grass_block".'
-"tooltip[1]" = 'Se lo spazio dei nomi viene omesso, si presume che venga usato "minecraft:".'
-
-[freecam.config.collision.whitelist.patterns]
-label = "Ignora le Espressioni Regolari"
-"tooltip[0]" = "Usa le sintassi Espressioni Regolari."
-"tooltip[1]" = "Corrisponde all'ID completo del blocco, ad esempio \"minecraft:grass_block\"."
-
-  [freecam.config.collision.alwaysCheck]
-  label = "Controlla Sempre la Collisione Iniziale"
-  "tooltip[0]" = "Se la §7Prospettiva Iniziale§r deve controllare la"
-  "tooltip[1]" = "collisione, anche quando si utilizza §7Ignora Tutte le Collisioni§r."
-
 [freecam.config.visual]
 label = "Opzioni Visive"
 tooltip = "Lo sguardo della Camera libera."
