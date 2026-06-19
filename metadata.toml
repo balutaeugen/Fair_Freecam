@@ -4,7 +4,7 @@ id = "freecam"
 group = "net.xolt.freecam"
 # Version can specify a semver pre-release, e.g. -alpha.1
 # Remember to run :changelog:patchChangelog when updating
-version = "26.6.1"
+version = "26.6.0"
 authors = ["m1dLL3"]
 license = "MIT"
 homepage = "https://minecraftfreecam.github.io"
