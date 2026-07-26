@@ -1,0 +1,215 @@
+name: Prepare release
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  prepare:
+    name: Create release branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      branch: ${{ steps.release.outputs.branch }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      sha: ${{ steps.release.outputs.sha }}
+      version: ${{ steps.release.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: temurin
+
+      - name: Calculate version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          prefix="$(date -u +%y).$((10#$(date -u +%m)))"
+          highest=-1
+
+          while IFS= read -r tag; do
+            version="${tag#v}"
+            if [[ "$version" =~ ^${prefix//./\\.}\.([0-9]+)$ ]]; then
+              index="${BASH_REMATCH[1]}"
+              (( 10#$index > highest )) && highest=$((10#$index))
+            fi
+          done < <(
+            {
+              git tag --list "v${prefix}.*"
+              gh release list --repo "$GITHUB_REPOSITORY" --limit 100 \
+                --json tagName --jq '.[].tagName'
+              yq -r '"v" + .mod.version' metadata.toml
+            } | sort -u
+          )
+
+          version="$prefix.$((highest + 1))"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Preparing v$version"
+
+      - name: Update release files
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          yq -i '.mod.version = strenv(VERSION)' metadata.toml
+          ./gradlew --project-dir changelog patchChangelog
+
+      - name: Commit and push release branch
+        id: release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          branch="release/$VERSION"
+
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            echo "::error::Branch '$branch' already exists"
+            exit 1
+          fi
+
+          git switch -c "$branch"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add metadata.toml CHANGELOG.md
+          git commit -m "Prepare v$VERSION"
+          git push origin "HEAD:refs/heads/$branch"
+
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install CI dependencies
+        run: npm ci --workspace ci --omit dev
+
+      - name: Generate release build matrix
+        id: matrix
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          node ci/src/build_matrix.ts \
+            --version "$VERSION" \
+            --release \
+            --output matrix.json
+          echo "matrix=$(jq -c . matrix.json)" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: ${{ matrix.name }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.prepare.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: temurin
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Run Gradle
+        env:
+          args: ${{ toJSON(matrix.gradle_args) }}
+        run: |
+          mapfile -t args < <(jq --raw-output .[] <<< "$args")
+          ./gradlew "${args[@]}"
+
+      - name: Upload release artifacts
+        if: matrix.upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.upload.name }}
+          path: ${{ matrix.upload.path }}
+          archive: ${{ matrix.upload.archive }}
+          retention-days: ${{ matrix.upload.days }}
+          if-no-files-found: error
+
+  draft:
+    name: Tag and draft GitHub release
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create release tag
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag --annotate "v$VERSION" --message "Fair Freecam $VERSION"
+          git push origin "refs/tags/v$VERSION"
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          metadata=(artifacts/release-*.json)
+          if (( ${#metadata[@]} != 1 )); then
+            echo "::error::Found ${#metadata[@]} release metadata files; expected 1"
+            exit 1
+          fi
+
+          mv "${metadata[0]}" artifacts/release-metadata.json
+          jq -r .changelog artifacts/release-metadata.json > release-notes.md
+
+          gh release create "v$VERSION" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "Fair Freecam $VERSION" \
+            --notes-file release-notes.md \
+            --draft \
+            artifacts/release-metadata.json \
+            artifacts/*.jar
+
+          {
+            echo "## Draft release created"
+            echo
+            echo "- Branch: \`${{ needs.prepare.outputs.branch }}\`"
+            echo "- Tag: \`v$VERSION\`"
+            echo "- Publish the draft release to upload it to Modrinth."
+          } >> "$GITHUB_STEP_SUMMARY"

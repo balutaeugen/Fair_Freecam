@@ -2,6 +2,8 @@ name: Build
 
 on:
   push:
+    branches-ignore:
+      - 'release/**'
   pull_request:
 
 # Group workflow runs by event and ref.
@@ -108,18 +110,3 @@ jobs:
             echo "_Expires on **$(date --utc --date=+"$upload_days"days +%F)** (UTC)._"
             echo
           ) >> "$GITHUB_STEP_SUMMARY"
-
-  publish:
-    if: github.event_name != 'push' || needs.prepare.outputs.do_release
-    name: Publish
-    uses: ./.github/workflows/publish.yaml
-    needs:
-      - prepare
-      - build
-    permissions:
-      contents: write
-    secrets:
-      MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-      CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
-    with:
-      dry-run: ${{ github.event_name != 'push' }}

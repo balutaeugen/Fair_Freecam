@@ -1,24 +1,12 @@
-name: Publish
+name: Publish to Modrinth
 
 on:
-  workflow_call:
-    inputs:
-      ref:
-        description: Ref to publish
-        type: string
-        default: ${{ github.sha }}
-      dry-run:
-        description: Dry run
-        type: boolean
-        default: false
-    secrets:
-       MODRINTH_TOKEN:
-         description: Modrinth API token (required unless dry-run)
-         required: false
-       CURSEFORGE_TOKEN:
-         description: CurseForge API token (required unless dry-run)
-         required: false
-    outputs: {}
+  release:
+    types: [published]
+
+concurrency:
+  group: modrinth-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
 
 permissions: {}
 
@@ -27,67 +15,30 @@ defaults:
     shell: bash
 
 jobs:
-  release:
-    name: ${{ inputs.dry-run && 'dry run' || 'Release' }}
+  publish:
+    name: Modrinth
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
+    timeout-minutes: 15
     permissions:
-      # Grant 'write' to create releases.
-      contents: write
+      contents: read
 
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v8
-        with:
-          path: artifacts
-          merge-multiple: true
-
-      - name: Publish GitHub Release
+      - name: Download GitHub release assets
         env:
-          dry_run: ${{ inputs.dry-run || '' }}
-          ref: ${{ inputs.ref }}
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
         run: |
-          set -o pipefail
-          shopt -s nullglob
+          mkdir artifacts
+          gh release download "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir artifacts
 
-          meta=artifacts/release-metadata.json
-          files=( artifacts/release-*.json )
-          [ ${#files[@]} = 1 ] || {
-            echo "::error::Found ${#files[@]} release json artifacts, expected 1"
-            exit 1
-          }
-          mv "${files[0]}" "$meta"
+      - name: Validate release assets
+        run: |
+          test -f artifacts/release-metadata.json
+          compgen -G 'artifacts/*.jar' >/dev/null
 
-          version=$(jq .mod_version "$meta" --raw-output)
-          title=$(jq .display_name "$meta" --raw-output)
-          jq .changelog "$meta" --raw-output > changelog.md
-
-          args=(
-            --repo "$GITHUB_REPOSITORY"
-            release create "v$version"
-            --target "$ref"
-            --title "$title"
-            --notes-file changelog.md
-          )
-
-          jq '.release_type == "release"' "$meta" --exit-status >/dev/null || {
-            args+=( --prerelease )
-          }
-
-          args+=( "$meta" artifacts/*.jar )
-
-          if [ -n "$dry_run" ]; then
-            echo "Dry run:"
-            printf ' %q' gh "${args[@]}"
-            echo
-          else
-            gh "${args[@]}"
-          fi
-
-      - name: Setup Java
-        uses: actions/setup-java@v5
+      - uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: temurin
@@ -95,19 +46,11 @@ jobs:
       - name: Setup Freecam Publisher
         uses: MinecraftFreecam/Publisher@c5fc4cecf816f5621a58cf54d45ded30dea2f164  # v0.0.4
 
-      - name: Publish to CurseForge & Modrinth
+      - name: Publish to Modrinth
         env:
-          dry_run: ${{ inputs.dry-run || '' }}
-          MODRINTH_TOKEN: ${{ inputs.dry-run && 'token' || secrets.MODRINTH_TOKEN }}
-          CURSEFORGE_TOKEN: ${{ inputs.dry-run && 'token' || secrets.CURSEFORGE_TOKEN }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
         run: |
           echo "::notice::Using $(freecam-publish --version)"
-          args=(
-            --metadata artifacts/release-metadata.json
+          freecam-publish \
+            --metadata artifacts/release-metadata.json \
             artifacts
-          )
-          if [ -n "$dry_run" ]; then
-            echo "Dry run:"
-            args+=( --dry-run )
-          fi
-          freecam-publish "${args[@]}"
