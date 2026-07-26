@@ -1,4 +1,5 @@
 import net.fabricmc.loom.task.FabricModJsonV1Task
+import org.gradle.kotlin.dsl.sc
 
 plugins {
     alias(libs.plugins.fletchingtable.fabric)
@@ -21,25 +22,34 @@ stonecutter replacements {
     }
 }
 
+val fabricApiModules =  buildList {
+    val mc = sc.current.parsed
+    sequenceOf(
+        "fabric-api-base",
+        "fabric-lifecycle-events-v1",
+    ).forEach(::add)
+    when {
+        mc >= "1.21.9" -> add("fabric-resource-loader-v1")
+        else -> add("fabric-resource-loader-v0")
+    }
+    when {
+        mc >= "26.1" -> add("fabric-key-mapping-api-v1")
+        else -> add("fabric-key-binding-api-v1")
+    }
+    sort()
+}
+
+val fabricApiVersion = requireNotNull(meta.deps["fabric_api"]) {
+    "Missing deps.fabric_api for ${project.path}"
+}
+
 dependencies {
     minecraft("com.mojang:minecraft:${meta.mc}")
     loomAdapter.applyMojangMappings()
     modImplementation(libs.fabric.loader)
 
-    val fabricApiVersion = requireNotNull(meta.deps["fabric_api"]) {
-        "Missing deps.fabric_api for ${project.path}"
-    }
-
-    sequenceOf(
-        "fabric-lifecycle-events-v1",
-        if (sc.current.parsed >= "26.1") "fabric-key-mapping-api-v1"
-        else "fabric-key-binding-api-v1",
-    ).map { name ->
-        fabricApi.module(name, fabricApiVersion)
-    }.forEach { module ->
-        // TODO: include via jar-in-jar and drop `requires: fabric-api` from fabric.mod.json.
-        // include(module)
-        modImplementation(module)
+    fabricApiModules.forEach { name ->
+        include(modImplementation(fabricApi.module(name, fabricApiVersion))!!)
     }
 
     // Note: cloth-config and our fabric.mod.json require the entire fabric-api at runtime
@@ -56,11 +66,11 @@ dependencies {
         include(it.project)
         api(project(path = it.project.path, configuration = "namedElements"))
 
-        include("me.shedaniel.cloth:cloth-config-fabric:${meta.deps["cloth"]}")
-        modApi("me.shedaniel.cloth:cloth-config-fabric:${meta.deps["cloth"]}") {
+        include(modApi("me.shedaniel.cloth:cloth-config-fabric") {
+            version { prefer(meta.deps["cloth"]!!) }
             exclude(module = "fabric-api")
             exclude(module = "fabric-loader")
-        }
+        })
     } ?: logger.warn("No :cloth-config project for ${project.path}")
 }
 
@@ -92,20 +102,20 @@ loom {
 tasks.register<Copy>("buildAndCollect") {
     group = "build"
     from(loomAdapter.modJar.map { it.archiveFile })
-    into(rootProject.layout.buildDirectory.file("libs/${meta.version}"))
+    into(rootProject.layout.buildDirectory.file("libs/${meta.buildDir}"))
     dependsOn(tasks.build)
 }
 
 tasks {
     val generateModJson by registering(FabricModJsonV1Task::class) {
-        outputFile = layout.buildDirectory.dir("generated-mod-json").map {
+        outputFile = layout.buildDirectory.dir("generated/mod-json").map {
             it.file("fabric.mod.json")
         }
 
         json {
             modId = meta.id
             name = meta.name
-            version = meta.version
+            version = meta.version.toString()
             description = meta.description
             licenses = listOf(meta.license)
             meta.authors.forEach(::author)
@@ -125,7 +135,7 @@ tasks {
 
             depends("minecraft", meta.reqs["mc"]?.toString() ?: error("${project.path} missing reqs.mc"))
             depends("fabricloader", meta.reqs["fabric_loader"]?.toString() ?: error("${project.path} missing reqs.fabric_loader"))
-            depends(if (sc.current.parsed < "1.19.2") "fabric" else "fabric-api", "*")
+            fabricApiModules.forEach { depends(it, "*") }
             recommends("modmenu", "*")
 
             contactInformation = mapOf(
@@ -151,10 +161,10 @@ tasks {
         from(generateModJson)
 
         filesMatching("freecam-fabric.mixins.json5") {
-            expand(commonExpansions)
+            expand("mixinCompatLevel" to "JAVA_${meta.javaVersion}")
         }
 
-        inputs.properties(commonExpansions)
+        inputs.properties("java_version" to meta.javaVersion)
     }
 
     generateReleaseMetadata {
