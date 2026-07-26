@@ -26,10 +26,6 @@ public interface ModConfig {
 
     double getVerticalSpeed();
 
-    boolean ignoreAllCollision();
-
-    boolean shouldCheckInitialCollision();
-
     Perspective getInitialPerspective();
 
     boolean shouldShowPlayer();
@@ -57,8 +53,6 @@ public interface ModConfig {
     boolean shouldFreezePlayer();
 
     boolean shouldPreventInteractions();
-
-    boolean allowInteractionsFromCamera();
 
     boolean allowInteractionsFromPlayer();
 

@@ -71,8 +71,7 @@ public class FreeCamera extends AbstractClientPlayer {
     }
 
     // Mutate the position and rotation based on perspective
-    // If checkCollision is true, move as far as possible without colliding
-    public void applyPerspective(Perspective perspective, boolean checkCollision) {
+    public void applyPerspective(Perspective perspective) {
         FreecamPosition position = new FreecamPosition(this);
 
         switch (perspective) {
@@ -81,31 +80,18 @@ public class FreeCamera extends AbstractClientPlayer {
                 break;
             case FIRST_PERSON:
                 // Move just in front of the player's eyes
-                moveForwardUntilCollision(position, 0.4, checkCollision);
+                moveForwardUntilCollision(position, 0.4);
                 break;
             case THIRD_PERSON_MIRROR:
                 // Invert the rotation and fallthrough into the THIRD_PERSON case
                 position.mirrorRotation();
             case THIRD_PERSON:
                 // Move back as per F5 mode
-                moveForwardUntilCollision(position, -4.0, checkCollision);
+                moveForwardUntilCollision(position, -4.0);
                 break;
         }
     }
 
-    // Move FreeCamera forward using FreecamPosition.moveForward.
-    // If checkCollision is true, stop moving forward before hitting a collision.
-    // Return true if successfully able to move.
-    private boolean moveForwardUntilCollision(FreecamPosition position, double distance, boolean checkCollision) {
-        if (!checkCollision) {
-            position.moveForward(distance);
-            applyPosition(position);
-            return true;
-        }
-        return moveForwardUntilCollision(position, distance);
-    }
-
-    // Same as above, but always check collision.
     private boolean moveForwardUntilCollision(FreecamPosition position, double maxDistance) {
         boolean negative = maxDistance < 0;
         maxDistance = negative ? -1 * maxDistance : maxDistance;
@@ -184,16 +170,16 @@ public class FreeCamera extends AbstractClientPlayer {
         return MC.player.getEffect(effect);
     }
 
-    // Prevents pistons from moving FreeCamera when collision.ignoreAll is enabled.
+    // Allows pistons to move FreeCamera.
     @Override
     public PushReaction getPistonPushReaction() {
-        return ModConfig.get().ignoreAllCollision() ? PushReaction.IGNORE : PushReaction.NORMAL;
+        return PushReaction.NORMAL;
     }
 
-    // Prevents collision with solid entities (shulkers, boats)
+    // Allows collision with solid entities (shulkers, boats)
     @Override
     public boolean canCollideWith(Entity other) {
-        return false;
+        return true;
     }
 
     // Ensures that the FreeCamera is always in the swimming pose.

@@ -1,10 +1,10 @@
 [freecam.config.gui]
-title = "Freecam Options"
+title = "Fiar Freecam Options"
 fallback.title = "Config GUI not available."
 
 [freecam.config.controls]
 label = "Key Bindings"
-tooltip = "Freecam key bindings."
+tooltip = "Fair Freecam key bindings."
 
 [freecam.config.movement]
 label = "Movement Options"
@@ -20,34 +20,6 @@ speed.horizontal.label = "Horizontal Speed"
 speed.horizontal.tooltip = "The horizontal speed of freecam."
 speed.vertical.label = "Vertical Speed"
 speed.vertical.tooltip = "The vertical speed of freecam."
-
-[freecam.config.collision]
-label = "Collision Options"
-tooltip = "Which blocks you can travel through in freecam."
-
-ignoreAll.label = "Ignore All Collision"
-ignoreAll."tooltip[0]" = "Allows travelling through all blocks in freecam."
-ignoreAll."tooltip[1]" = "§eOverrides above settings."
-
-ignoreTransparent.label = "Ignore Transparent Blocks"
-ignoreTransparent.tooltip = "Allows travelling through transparent blocks in freecam."
-
-ignoreOpenable.label = "Ignore Openable Blocks"
-ignoreOpenable.tooltip = "Allows travelling through doors/trapdoors/gates in freecam."
-
-ignoreCustom.label = "Custom Ignore List"
-ignoreCustom.tooltip = "Allows travelling through specific blocks in freecam."
-
-whitelist.ids.label = "Ignore IDs"
-whitelist.ids."tooltip[0]" = "Use block id, e.g. \"grass_block\"."
-whitelist.ids."tooltip[1]" = "If the namespace is omitted, \"minecraft:\" is assumed."
-whitelist.patterns.label = "Ignore Regular Expressions"
-whitelist.patterns."tooltip[0]" = "Use Regular Expression syntax."
-whitelist.patterns."tooltip[1]" = "Matched against full block id, e.g. \"minecraft:grass_block\"."
-
-alwaysCheck.label = "Always Check Initial Collision"
-alwaysCheck."tooltip[0]" = "Whether §7Initial Perspective§r should check for"
-alwaysCheck."tooltip[1]" = "collision, even when using §7Ignore All Collision§r."
 
 [freecam.config.visual]
 label = "Visual Options"
@@ -78,7 +50,7 @@ outlinePlayer."tooltip[1]" = "The outline can also be controlled using the \"Tog
 
 [freecam.config.utility]
 label = "Utility Options"
-tooltip = "Freecam enhancements."
+tooltip = "Fair Freecam enhancements."
 
 disableOnDamage.label = "Disable on Damage"
 disableOnDamage.tooltip = "Disables freecam when damage is received."
@@ -114,7 +86,7 @@ blacklist.label = "Blacklist:"
 label = "Notification Options"
 tooltip = "Show or hide notifications."
 
-freecam.label = "Freecam Notifications"
+freecam.label = "Fair Freecam Notifications"
 freecam.tooltip = "Notifies you when entering/exiting freecam."
 
 tripod.label = "Tripod Notifications"

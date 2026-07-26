@@ -13,14 +13,13 @@ import java.util.List;
 public class ModConfigDTO implements MCAwareModConfig, RawJsonHolder {
 
     private transient @Nullable JsonObject rawJson;
-    private transient CollisionPredicate collisionPredicate;
 
     public ModConfigDTO() {
         onConfigChange();
     }
 
     public void onConfigChange() {
-        collisionPredicate = CollisionPredicate.create(collision);
+
     }
 
     @Override
@@ -49,21 +48,6 @@ public class ModConfigDTO implements MCAwareModConfig, RawJsonHolder {
     }
 
     @Override
-    public boolean ignoreAllCollision() {
-        return collision.ignoreAll;
-    }
-
-    @Override
-    public boolean shouldCheckInitialCollision() {
-        return collision.alwaysCheck || !collision.ignoreAll;
-    }
-
-    @Override
-    public boolean ignoreCollisionWith(Block block) {
-        return collision.ignoreAll || collisionPredicate.shouldIgnore(block);
-    }
-
-    @Override
     public Perspective getInitialPerspective() {
         return visual.perspective;
     }
@@ -80,7 +64,7 @@ public class ModConfigDTO implements MCAwareModConfig, RawJsonHolder {
 
     @Override
     public boolean isFullBrightEnabled() {
-        return visual.fullBright;
+        return false;
     }
 
     @Override
@@ -100,21 +84,12 @@ public class ModConfigDTO implements MCAwareModConfig, RawJsonHolder {
 
     @Override
     public boolean shouldPreventInteractions() {
-        return !utility.allowInteract;
-    }
-
-    public boolean allowInteractionsFrom(InteractionMode mode) {
-        return utility.allowInteract && utility.interactionMode == mode;
-    }
-
-    @Override
-    public boolean allowInteractionsFromCamera() {
-        return allowInteractionsFrom(InteractionMode.CAMERA);
+        return true;
     }
 
     @Override
     public boolean allowInteractionsFromPlayer() {
-        return allowInteractionsFrom(InteractionMode.PLAYER);
+        return false;
     }
 
     @Override
@@ -158,22 +133,6 @@ public class ModConfigDTO implements MCAwareModConfig, RawJsonHolder {
         public FlightMode flightMode = FlightMode.DEFAULT;
         public double horizontalSpeed = 1.0;
         public double verticalSpeed = 1.0;
-    }
-
-    public CollisionConfig collision = new CollisionConfig();
-    public static class CollisionConfig {
-        public boolean ignoreTransparent = false;
-        public boolean ignoreOpenable = false;
-        public boolean ignoreCustom = false;
-
-        public CollisionWhitelist whitelist = new CollisionWhitelist();
-        public static class CollisionWhitelist {
-            public List<String> ids = new ArrayList<>();
-            public List<String> patterns = new ArrayList<>();
-        }
-
-        public boolean ignoreAll = true;
-        public boolean alwaysCheck = false;
     }
 
     public VisualConfig visual = new VisualConfig();

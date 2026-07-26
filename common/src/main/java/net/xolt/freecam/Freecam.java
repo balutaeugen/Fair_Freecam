@@ -333,10 +333,7 @@ public class Freecam {
             return;
         }
         freeCamera.copyPosition(MC.player);
-        freeCamera.applyPerspective(
-                ModConfig.get().getInitialPerspective(),
-                ModConfig.get().shouldCheckInitialCollision()
-        );
+        freeCamera.applyPerspective(ModConfig.get().getInitialPerspective());
     }
 
     @ApiStatus.AvailableSince("0.4.0")

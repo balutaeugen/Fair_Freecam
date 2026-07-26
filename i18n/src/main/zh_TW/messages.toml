@@ -1,6 +1,6 @@
 [freecam.msg]
-enabled = "Freecam 已啟用。"
-disabled = "Freecam 已停用。"
+enabled = "Fair Freecam 已啟用。"
+disabled = "Fair Freecam 已停用。"
 invalidRegex = "無效的規則運算式：%s"
 
   [freecam.msg.tripod]
@@ -9,4 +9,4 @@ invalidRegex = "無效的規則運算式：%s"
   reset = "重設攝影機 %s"
 
   [freecam.msg.restricted]
-  server = "目前的伺服器限制使用 Freecam (%s)。"
+  server = "目前的伺服器限制使用 Fair Freecam (%s)。"

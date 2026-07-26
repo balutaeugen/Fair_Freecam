@@ -37,11 +37,11 @@
       />
     </mask>
   </defs>
-  <rect id="background" width="512" height="512" fill="#002a36"/>
+  <rect id="background" width="512" height="512" fill="#850000"/>
   <path
     id="camera"
     mask="url(#cutouts)"
-    fill="#00607c"
+    fill="#d40000"
     d="
       M80 190
       C80 175 83 170 104 170

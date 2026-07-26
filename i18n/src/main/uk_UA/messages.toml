@@ -9,4 +9,4 @@ invalidRegex = "Неприпустимий регулярний вираз: %s"
   reset = "Скинути камеру %s"
 
   [freecam.msg.restricted]
-  server = "Freecam обмежено на цьому сервері (%s)."
+  server = "Fair Freecam обмежено на цьому сервері (%s)."
