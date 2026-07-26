@@ -38,7 +38,9 @@ include(
     "conventions",
     "i18n-plugin",
     "loom-adapter",
+    "fml-support",
     "metadata",
+    "shadow",
     "release-metadata",
     "settings",
 )

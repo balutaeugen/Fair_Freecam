@@ -9,6 +9,20 @@ and Freecam's versioning is based on [Semantic Versioning](https://semver.org/sp
 
 ### Added
 
+### Changed
+
+### Removed
+
+### Fixed
+
+## [1.4.1-beta.2] - 2026-07-13
+
+1.4.1 adds initial support for Minecraft 26.2 and a new 'Outline Player' feature.
+Feedback and bug reports are greatly appreciated!
+**[Bug tracker](https://github.com/MinecraftFreecam/Freecam/issues).**
+
+### Added
+
 - A glowing player outline feature, to highlight your player while in Freecam ([340](https://github.com/MinecraftFreecam/Freecam/pull/340))
   - 'Outline Player' setting that to control whether the outline is initially enabled when entering Freecam (off by default)
   - 'Toggle Outline Player' keybind to enable or disable the outline while in Freecam
@@ -17,9 +31,19 @@ and Freecam's versioning is based on [Semantic Versioning](https://semver.org/sp
 
 ### Changed
 
+- Cloth Config is now bundled on all builds ([539](https://github.com/MinecraftFreecam/Freecam/pull/539))
+  - Previously, Cloth Config needed to be installed separately on MC 1.17.1 Forge builds
+- Various translation updates
+
 ### Removed
 
+- Dropped dependency on Fabric API ([537](https://github.com/MinecraftFreecam/Freecam/pull/537))
+  - The required modules are now distributed with Freecam.
+
 ### Fixed
+
+- Resolved Fabric Loader "invalid version" warnings related to our Cloth Config implementation ([486](https://github.com/MinecraftFreecam/Freecam/issues/486), [534](https://github.com/MinecraftFreecam/Freecam/pull/534))
+- Fixed our Config GUI not being available for (legacy) Forge builds ([539](https://github.com/MinecraftFreecam/Freecam/pull/539))
 
 ## [1.4.1-beta.1] - 2026-06-26
 
@@ -756,7 +780,8 @@ This version includes major underlying changes. Feedback and bug reports are gre
 - Minecraft 1.18 support.
 - Minecraft 1.17 support.
 
-[Unreleased]: https://github.com/MinecraftFreecam/Freecam/compare/v1.4.1-beta.1...HEAD
+[Unreleased]: https://github.com/MinecraftFreecam/Freecam/compare/v1.4.1-beta.2...HEAD
+[1.4.1-beta.2]: https://github.com/MinecraftFreecam/Freecam/compare/v1.4.1-beta.1...v1.4.1-beta.2
 [1.4.1-beta.1]: https://github.com/MinecraftFreecam/Freecam/compare/v1.4.1-alpha.1...v1.4.1-beta.1
 [1.4.1-alpha.1]: https://github.com/MinecraftFreecam/Freecam/compare/v1.4.0...v1.4.1-alpha.1
 [1.4.0]: https://github.com/MinecraftFreecam/Freecam/compare/v1.4.0-rc.2...v1.4.0
