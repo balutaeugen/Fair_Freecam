@@ -192,3 +192,4 @@ jobs:
               echo "A pull request for \`$TAG\` is open."
               echo "Resolve its conflicts manually, verify the build, and approve it."
             } >> "$GITHUB_STEP_SUMMARY"
+          fi
