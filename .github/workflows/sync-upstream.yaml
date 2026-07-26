@@ -1,0 +1,180 @@
+name: Check upstream release
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: check-upstream-release
+  cancel-in-progress: false
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  UPSTREAM_REPOSITORY: MinecraftFreecam/Freecam
+
+jobs:
+  check:
+    name: Open upstream release PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check out fork main branch
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Find latest upstream release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          release="$(
+            gh api "repos/$UPSTREAM_REPOSITORY/releases?per_page=100" \
+              --jq 'map(select(.draft | not)) | first | {tag: .tag_name, url: .html_url}'
+          )"
+          tag="$(jq -r .tag <<< "$release")"
+          url="$(jq -r .url <<< "$release")"
+
+          git fetch --force --no-tags \
+            "https://github.com/$UPSTREAM_REPOSITORY.git" \
+            "refs/tags/$tag"
+          sha="$(git rev-parse 'FETCH_HEAD^{commit}')"
+
+          safe_tag="$(sed 's/[^A-Za-z0-9._-]/-/g' <<< "$tag")"
+          branch="upstream/release-$safe_tag"
+
+          {
+            echo "branch=$branch"
+            echo "sha=$sha"
+            echo "tag=$tag"
+            echo "url=$url"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Latest upstream release: $tag ($sha)"
+
+      - name: Check whether release is already included
+        id: included
+        env:
+          BRANCH: ${{ steps.release.outputs.branch }}
+          RELEASE_SHA: ${{ steps.release.outputs.sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          if git merge-base --is-ancestor "$RELEASE_SHA" HEAD; then
+            echo "Release commit is already contained in main"
+            echo "value=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          merged="$(
+            gh pr list \
+              --repo "$GITHUB_REPOSITORY" \
+              --state merged \
+              --head "$BRANCH" \
+              --json number \
+              --jq 'length'
+          )"
+          if (( merged > 0 )); then
+            echo "A PR for this release was already merged"
+            echo "value=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "value=false" >> "$GITHUB_OUTPUT"
+
+      - name: Create or restore upstream branch
+        if: steps.included.outputs.value != 'true'
+        env:
+          BRANCH: ${{ steps.release.outputs.branch }}
+          RELEASE_SHA: ${{ steps.release.outputs.sha }}
+        run: |
+          set -euo pipefail
+
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            echo "Branch already exists; preserving any manual conflict fixes"
+          else
+            git push origin "$RELEASE_SHA:refs/heads/$BRANCH"
+          fi
+
+      - name: Open or restore pull request
+        if: steps.included.outputs.value != 'true'
+        env:
+          BRANCH: ${{ steps.release.outputs.branch }}
+          TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_URL: ${{ steps.release.outputs.url }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          existing="$(
+            gh pr list \
+              --repo "$GITHUB_REPOSITORY" \
+              --state all \
+              --head "$BRANCH" \
+              --json number,state,url \
+              --jq '.[0] // empty'
+          )"
+
+          if [[ -n "$existing" ]]; then
+            number="$(jq -r .number <<< "$existing")"
+            state="$(jq -r .state <<< "$existing")"
+            url="$(jq -r .url <<< "$existing")"
+
+            if [[ "$state" == "CLOSED" ]]; then
+              gh pr reopen "$number" --repo "$GITHUB_REPOSITORY"
+              echo "Reopened $url"
+            else
+              echo "PR already open: $url"
+            fi
+            exit 0
+          fi
+
+          body="$(cat <<EOF
+          An automated check found a new upstream release: [$TAG]($RELEASE_URL).
+
+          This branch points at the upstream release commit. Conflicts with the
+          Fair Freecam changes are expected and must be resolved manually before
+          this PR is approved and merged.
+
+          After resolving conflicts, run the full build and review the resulting
+          behavior before merging.
+
+          <!-- upstream-release:$TAG -->
+          EOF
+          )"
+
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base main \
+            --head "$BRANCH" \
+            --title "Sync upstream release $TAG" \
+            --body "$body"
+
+      - name: Report status
+        env:
+          INCLUDED: ${{ steps.included.outputs.value }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          if [[ "$INCLUDED" == "true" ]]; then
+            echo "Upstream release $TAG is already included." >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "## Upstream release requires review"
+              echo
+              echo "A pull request for \`$TAG\` is open."
+              echo "Resolve its conflicts manually, verify the build, and approve it."
+            } >> "$GITHUB_STEP_SUMMARY"
