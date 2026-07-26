@@ -3,9 +3,15 @@ name: Publish to Modrinth
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing GitHub release tag to publish
+        type: string
+        required: true
 
 concurrency:
-  group: modrinth-${{ github.event.release.tag_name }}
+  group: modrinth-${{ github.event.release.tag_name || inputs.tag }}
   cancel-in-progress: false
 
 permissions: {}
@@ -26,7 +32,7 @@ jobs:
       - name: Download GitHub release assets
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.release.tag_name }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
         run: |
           mkdir artifacts
           gh release download "$TAG" \
@@ -38,19 +44,91 @@ jobs:
           test -f artifacts/release-metadata.json
           compgen -G 'artifacts/*.jar' >/dev/null
 
-      - uses: actions/setup-java@v5
-        with:
-          java-version: '21'
-          distribution: temurin
-
-      - name: Setup Freecam Publisher
-        uses: MinecraftFreecam/Publisher@c5fc4cecf816f5621a58cf54d45ded30dea2f164  # v0.0.4
-
       - name: Publish to Modrinth
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
         run: |
-          echo "::notice::Using $(freecam-publish --version)"
-          freecam-publish \
-            --metadata artifacts/release-metadata.json \
-            artifacts
+          set -euo pipefail
+
+          metadata=artifacts/release-metadata.json
+          project_id="$(jq -r .platforms.modrinth.project_id "$metadata")"
+          mod_version="$(jq -r .mod_version "$metadata")"
+          changelog="$(jq -r .changelog "$metadata")"
+          release_type="$(
+            jq -r '
+              if .release_type == "release" then "release"
+              elif .release_type == "alpha" then "alpha"
+              else "beta"
+              end
+            ' "$metadata"
+          )"
+
+          while IFS= read -r version; do
+            filename="$(jq -r .filename <<< "$version")"
+            artifact="artifacts/$filename"
+
+            if [[ ! -f "$artifact" ]]; then
+              echo "::error::Missing release artifact: $filename"
+              exit 1
+            fi
+
+            hash="$(sha512sum "$artifact" | cut -d ' ' -f 1)"
+            status="$(
+              curl --silent --output /dev/null --write-out '%{http_code}' \
+                --header "Authorization: $MODRINTH_TOKEN" \
+                --header "User-Agent: $GITHUB_REPOSITORY release workflow" \
+                "https://api.modrinth.com/v2/version_file/$hash?algorithm=sha512"
+            )"
+            if [[ "$status" == "200" ]]; then
+              echo "::notice::$filename is already on Modrinth; skipping"
+              continue
+            elif [[ "$status" != "404" ]]; then
+              echo "::error::Modrinth hash lookup failed with HTTP $status"
+              exit 1
+            fi
+
+            jq -n \
+              --arg project_id "$project_id" \
+              --arg name "$(jq -r .display_name <<< "$version")" \
+              --arg version_number "$mod_version" \
+              --arg changelog "$changelog" \
+              --arg version_type "$release_type" \
+              --arg loader "$(jq -r .loader <<< "$version")" \
+              --argjson game_versions "$(
+                jq '[.game_versions[] | select(endswith("-snapshot") | not)]' \
+                  <<< "$version"
+              )" \
+              --argjson dependencies "$(
+                jq '[
+                  .relationships[] |
+                  {
+                    project_id: .modrinth_id,
+                    dependency_type: (
+                      if .type == "bundled" then "embedded" else .type end
+                    )
+                  }
+                ]' <<< "$version"
+              )" \
+              '{
+                project_id: $project_id,
+                name: $name,
+                version_number: $version_number,
+                changelog: $changelog,
+                dependencies: $dependencies,
+                game_versions: $game_versions,
+                version_type: $version_type,
+                loaders: [$loader],
+                featured: false,
+                file_parts: ["file"],
+                primary_file: "file"
+              }' > modrinth-version.json
+
+            echo "Publishing $filename to Modrinth project $project_id"
+            curl --fail-with-body \
+              --request POST \
+              --header "Authorization: $MODRINTH_TOKEN" \
+              --header "User-Agent: $GITHUB_REPOSITORY release workflow" \
+              --form "data=@modrinth-version.json;type=application/json" \
+              --form "file=@$artifact;type=application/java-archive" \
+              https://api.modrinth.com/v2/version
+          done < <(jq -c '.versions[]' "$metadata")
