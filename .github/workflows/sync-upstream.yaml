@@ -28,16 +28,30 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: Validate sync token
+        env:
+          UPSTREAM_SYNC_TOKEN: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
+        run: |
+          if [[ -z "$UPSTREAM_SYNC_TOKEN" ]]; then
+            {
+              echo "::error::The UPSTREAM_SYNC_TOKEN secret is required."
+              echo "::error::Use a token that can write repository contents,"
+              echo "::error::create pull requests, and update workflow files."
+            }
+            exit 1
+          fi
+
       - name: Check out fork main branch
         uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
+          token: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
 
       - name: Find latest upstream release
         id: release
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
         run: |
           set -euo pipefail
 
@@ -70,7 +84,7 @@ jobs:
         env:
           BRANCH: ${{ steps.release.outputs.branch }}
           RELEASE_SHA: ${{ steps.release.outputs.sha }}
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
         run: |
           set -euo pipefail
 
@@ -116,7 +130,7 @@ jobs:
           BRANCH: ${{ steps.release.outputs.branch }}
           TAG: ${{ steps.release.outputs.tag }}
           RELEASE_URL: ${{ steps.release.outputs.url }}
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
         run: |
           set -euo pipefail
 
