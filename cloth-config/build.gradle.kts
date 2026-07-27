@@ -50,11 +50,6 @@ tasks {
     }
 
     jar {
-        // `GAMELIBRARY` is required to access Minecraft classes from ModLauncher 9 (1.17)
-        val modType = if (sc.current.parsed >= "1.17") "GAMELIBRARY" else "LIBRARY"
-        manifest.attributes(
-            "FMLModType" to modType,
-            "Automatic-Module-Name" to "${meta.id}.clothconfig",
-        )
+        manifest.attributes("Automatic-Module-Name" to "${meta.id}.clothconfig")
     }
 }

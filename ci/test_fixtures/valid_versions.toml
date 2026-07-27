@@ -9,5 +9,5 @@
 ]
 "1.18:1.18.9:buildscript" = [
   "common",
-  "forge",
+  "fabric",
 ]

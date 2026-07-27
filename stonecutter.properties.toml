@@ -11,7 +11,6 @@
 #   https://github.com/z4kn4fein/kotlin-semver#constraints
 #
 # Fabric: https://fabricmc.net/develop
-# NeoForge: https://projects.neoforged.net/neoforged/neoforge
 # Cloth Config: https://maven.shedaniel.me/me/shedaniel/cloth/cloth-config-fabric
 # ModMenu: https://maven.terraformersmc.com/releases/com/terraformersmc/modmenu
 
@@ -38,14 +37,8 @@ deps.modmenu = "20.0.0-beta.3"
 deps.fabric_api = "0.152.2+26.2"
 reqs.fabric_loader = ">=0.18.0"
 
-deps.neoforge_version = "26.2.0.6-beta"
-reqs.neoforge_version = ">=26.2.0-0"
-reqs.neoforge_loader = ">=1"
-
-
-["26.1"]
-supported_mc_versions = ["26.1", "26.1.1", "26.1.2"]
-reqs.mc = "~26.1"
+["26.1.2"]
+reqs.mc = "26.1.2"
 
 deps.cloth = "26.1.154"
 reqs.cloth = "~26.1"
@@ -53,11 +46,6 @@ deps.modmenu = "18.0.0-alpha.8"
 
 deps.fabric_api = "0.145.4+26.1.2"
 reqs.fabric_loader = ">=0.18.0"
-
-deps.neoforge_version = "26.1.2.2-beta"
-reqs.neoforge_version = ">=26.1.0-alpha"
-reqs.neoforge_loader = ">=1"
-
 
 ["1.21.11"]
 reqs.mc = "1.21.11"
@@ -68,86 +56,3 @@ reqs.cloth = "~21.11"
 deps.fabric_api = "0.139.4+1.21.11"
 deps.modmenu = "17.0.0-beta.2"
 reqs.fabric_loader = ">=0.14.0"
-
-deps.neoforge_version = "21.11.6-beta"
-deps.neoforge_pr = ""
-reqs.neoforge_version = ">=21.9.0-beta"
-reqs.neoforge_loader = ">=1"
-
-
-["1.20.6"]
-deps.cloth = "14.0.126"
-reqs.cloth = "^14"
-
-deps.fabric_api = "0.100.8+1.20.6"
-deps.modmenu = "10.0.0"
-reqs.fabric_loader = ">=0.14.0"
-
-deps.neoforge_version = "20.6.139"
-deps.neoforge_pr = ""
-reqs.neoforge_version = ">=20.6.11-beta"
-reqs.neoforge_loader = ">=1"
-
-fabric.supported_mc_versions = ["1.20.5"]
-fabric.reqs.mc = "~1.20.5"
-neoforge.reqs.mc = "~1.20.6"
-
-
-["1.19.4"]
-reqs.mc = "~1.19.4"
-deps.cloth = "10.1.117"
-reqs.cloth = "^10.1"
-
-deps.fabric_api = "0.87.2+1.19.4"
-deps.modmenu = "6.3.1"
-reqs.fabric_loader = ">=0.12.11"
-
-deps.forge_version = "45.2.6"
-reqs.forge_version = ">=45"
-reqs.forge_loader = ">=45"
-
-
-["1.18.2"]
-reqs.mc = "~1.18.2"
-deps.cloth = "6.5.102"
-reqs.cloth = "^6"
-
-deps.fabric_api = "0.77.0+1.18.2"
-deps.modmenu = "3.2.5"
-reqs.fabric_loader = ">=0.12.11"
-
-deps.forge_version = "40.2.14"
-reqs.forge_version = ">=40"
-reqs.forge_loader = ">=40"
-
-
-["1.17.1"]
-deps.cloth = "5.3.63"
-reqs.cloth = "^5"
-
-deps.fabric_api = "0.46.1+1.17"
-deps.modmenu = "2.0.17"
-reqs.fabric_loader = ">=0.12.11"
-
-deps.forge_version = "37.1.1"
-reqs.forge_version = ">=37"
-reqs.forge_loader = ">=37"
-
-fabric.supported_mc_versions = ["1.17"]
-fabric.reqs.mc = "~1.17"
-forge.reqs.mc = "~1.17.1"
-
-
-["1.16.5"]
-supported_mc_versions = ["1.16.2", "1.16.3", "1.16.4"]
-reqs.mc = "~1.16.2"
-
-deps.cloth = "4.17.101"
-
-deps.fabric_api = "0.42.0+1.16"
-deps.modmenu = "1.16.23"
-reqs.fabric_loader = ">=0.12.11"
-
-deps.forge_version = "36.2.41"
-reqs.forge_version = ">=34"
-reqs.forge_loader = ">=34"
