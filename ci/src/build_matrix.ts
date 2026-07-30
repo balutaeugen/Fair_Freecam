@@ -27,7 +27,7 @@ export function main(args: CliOptions) {
   );
 
   const changelogJobs = args.changelog
-    ? [buildChangelogJob(args.release, version)]
+    ? [buildChangelogJob(args.release)]
     : [];
 
   const staticJobs = matrixJobsToml
@@ -86,19 +86,14 @@ export function buildVersionMatrix(
 
 export function buildChangelogJob(
   release = false,
-  version?: string,
   file = "changelog.md",
 ): MatrixJob {
-  if (release && !version) {
-    throw new Error("buildChangelogJob: version is required when release=true");
-  }
-
   return {
     name: "Changelog",
     gradle_args: [
       "--project-dir=changelog",
       ":getChangelog",
-      release ? `--project-version=${version}` : "--unreleased",
+      ...(release ? [] : ["--unreleased"]),
       `--output-file=build/${file}`,
     ],
     upload: { path: `changelog/build/${file}`, days: 90, archive: false },

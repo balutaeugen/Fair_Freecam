@@ -12,6 +12,15 @@ buildscript {
 /** The actual changelog file lives outside this build, in the repo root. */
 val src = rootDir.resolveSibling("CHANGELOG.md")
 
+/** The newest released section is imported directly from upstream Freecam. */
+val upstreamVersion by lazy {
+    val heading = Regex("""^## \[([^]]+)]""")
+    src.useLines { lines ->
+        lines.mapNotNull { heading.find(it)?.groupValues?.get(1) }
+            .first { it != "Unreleased" }
+    }
+}
+
 /**
  * To minimize dependencies, we don't have `ModMetadata` or `freecam.metadata` here.
  * For now, just load it manually as a raw [TomlTable].
@@ -26,8 +35,9 @@ val meta by lazy {
 changelog {
     path = src.canonicalPath
 
-    // Use metadata.toml's mod version
-    version = provider { meta.getString("version") }
+    // Fair Freecam uses calendar versions, but its changelog is imported from
+    // the corresponding upstream Freecam release.
+    version = provider { upstreamVersion }
 
     // Use metadata.toml's GitHub URL to form tag & diff links
     repositoryUrl = provider { meta.getString("source") }
