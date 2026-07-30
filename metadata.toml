@@ -3,7 +3,7 @@ name = "Fair Freecam"
 id = "freecam"
 group = "net.xolt.freecam"
 # Version can specify a semver pre-release, e.g. -alpha.1
-version = "26.7.0"
+version = "26.7.1"
 authors = ["m1dLL3"]
 license = "MIT"
 homepage = "https://minecraftfreecam.github.io"
