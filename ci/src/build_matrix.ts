@@ -26,9 +26,7 @@ export function main(args: CliOptions) {
     SCProjectsByVersionSchema.parse(versionsToml.versions),
   );
 
-  const changelogJobs = args.changelog
-    ? [buildChangelogJob(args.release)]
-    : [];
+  const changelogJobs = args.changelog ? [buildChangelogJob(args.release)] : [];
 
   const staticJobs = matrixJobsToml
     ? MatrixJobsFileSchema.parse(matrixJobsToml).builds
