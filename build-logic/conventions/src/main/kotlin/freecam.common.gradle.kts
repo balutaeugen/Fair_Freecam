@@ -48,11 +48,23 @@ repositories {
         filter { includeGroup("me.shedaniel.cloth") }
     }
     exclusiveContent {
-        forRepository {
-            maven("https://maven.terraformersmc.com") { name = "TerraformersMC" }
-        }
+        forRepositories(
+            maven("https://maven.gnomecraft.net/releases") { name = "GnomeCraft" },
+            maven("https://maven.terraformersmc.com") { name = "TerraformersMC" },
+        )
         filter { includeGroup("com.terraformersmc") }
     }
+
+    // Manually register the LWJGL repository. Otherwise, Loom tries to inject it
+    // dynamically, causing premature repository resolution errors.
+    findByName("MavenCentralLWJGL") ?: exclusiveContent {
+        forRepositories(mavenCentral {
+            name = "MavenCentralLWJGL"
+            content { includeGroup("org.lwjgl") }
+        })
+        filter { includeGroup("org.lwjgl") }
+    }
+
     mavenCentral()
 }
 

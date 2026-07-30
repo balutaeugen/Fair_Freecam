@@ -39,6 +39,7 @@ include(
     "i18n-plugin",
     "loom-adapter",
     "metadata",
+    "shadow",
     "release-metadata",
     "settings",
 )

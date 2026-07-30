@@ -7,6 +7,12 @@ and Freecam's versioning is based on [Semantic Versioning](https://semver.org/sp
 
 ## [Unreleased]
 
+1.4.1 adds initial support for Minecraft 26.2 and a new 'Outline Player' feature.
+Feedback and bug reports are greatly appreciated!
+**[Bug tracker](https://github.com/MinecraftFreecam/Freecam/issues).**
+
+<!-- Squash "Cloth Config impl is now bundled" with "resolved Fabric Loader 'invalid version'" in full release -->
+
 ### Added
 
 ### Changed
@@ -14,6 +20,21 @@ and Freecam's versioning is based on [Semantic Versioning](https://semver.org/sp
 ### Removed
 
 ### Fixed
+
+## [1.4.1-beta.3] - 2026-07-29
+
+1.4.1 adds initial support for Minecraft 26.2 and a new 'Outline Player' feature.
+Feedback and bug reports are greatly appreciated!
+**[Bug tracker](https://github.com/MinecraftFreecam/Freecam/issues).**
+
+### Changed
+
+- Several fixes and improvements to our internal build system.
+- Our Cloth Config implementation is now bundled as part of the main mod, rather than as nested child mods ([561](https://github.com/MinecraftFreecam/Freecam/pull/561))
+
+### Fixed
+
+- Show the correct Cloth Config license in the Forge 1.17.1 build ([549](https://github.com/MinecraftFreecam/Freecam/pull/549))
 
 ## [1.4.1-beta.2] - 2026-07-13
 
@@ -780,7 +801,8 @@ This version includes major underlying changes. Feedback and bug reports are gre
 - Minecraft 1.18 support.
 - Minecraft 1.17 support.
 
-[Unreleased]: https://github.com/MinecraftFreecam/Freecam/compare/v1.4.1-beta.2...HEAD
+[Unreleased]: https://github.com/MinecraftFreecam/Freecam/compare/v1.4.1-beta.3...HEAD
+[1.4.1-beta.3]: https://github.com/MinecraftFreecam/Freecam/compare/v1.4.1-beta.2...v1.4.1-beta.3
 [1.4.1-beta.2]: https://github.com/MinecraftFreecam/Freecam/compare/v1.4.1-beta.1...v1.4.1-beta.2
 [1.4.1-beta.1]: https://github.com/MinecraftFreecam/Freecam/compare/v1.4.1-alpha.1...v1.4.1-beta.1
 [1.4.1-alpha.1]: https://github.com/MinecraftFreecam/Freecam/compare/v1.4.0...v1.4.1-alpha.1

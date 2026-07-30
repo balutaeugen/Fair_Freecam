@@ -1,34 +1,35 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import TOML from "smol-toml";
 import {
+  type MatrixJob,
   MatrixJobSchema,
   MatrixJobsFileSchema,
-  type MatrixJob,
 } from "./matrix_model.ts";
 import {
+  type SCProjectsByVersion,
   SCProjectsByVersionSchema,
   SCProjectSlugSchema,
-  type SCProjectsByVersion,
 } from "./stonecutter_model.ts";
-import { MATRIX_JOBS_FILE, STONECUTTER_FILE } from "./project_files.ts";
 import { readVersion } from "./read_version.ts";
 import app, { type CliOptions } from "./build_matrix_cli.ts";
 import { run, type StricliProcess } from "@stricli/core";
 
 export function main(args: CliOptions) {
   const version = args.version ?? readVersion();
+  const versionsToml = TOML.parse(readFileSync(args.versionsFile, "utf8"));
+  const matrixJobsToml = args.jobsFile
+    ? TOML.parse(readFileSync(args.jobsFile, "utf8"))
+    : null;
 
   const versionJobs = buildVersionMatrix(
     version + (args.release ? "" : "-SNAPSHOT"),
-    loadVersions("versions", args.versionsFile),
+    SCProjectsByVersionSchema.parse(versionsToml.versions),
   );
 
-  const changelogJobs = args.changelog
-    ? [buildChangelogJob(args.release, version)]
-    : [];
+  const changelogJobs = args.changelog ? [buildChangelogJob(args.release)] : [];
 
-  const staticJobs = args.jobsFile
-    ? loadMatrixJobs("build", args.jobsFile)
+  const staticJobs = matrixJobsToml
+    ? MatrixJobsFileSchema.parse(matrixJobsToml).builds
     : [];
 
   const matrix = [...changelogJobs, ...staticJobs, ...versionJobs].sort(
@@ -52,7 +53,7 @@ export function main(args: CliOptions) {
 
 export function buildVersionMatrix(
   version: string,
-  versions: Record<string, unknown>,
+  versions: SCProjectsByVersion,
 ): MatrixJob[] {
   const loaders = ["fabric"];
   const matrix: MatrixJob[] = [];
@@ -83,43 +84,19 @@ export function buildVersionMatrix(
 
 export function buildChangelogJob(
   release = false,
-  version?: string,
   file = "changelog.md",
 ): MatrixJob {
-  if (release && !version) {
-    throw new Error("buildChangelogJob: version is required when release=true");
-  }
-
   return {
     name: "Changelog",
     gradle_args: [
       "--project-dir=changelog",
       ":getChangelog",
-      release ? `--project-version=${version}` : "--unreleased",
+      ...(release ? [] : ["--unreleased"]),
       `--output-file=build/${file}`,
     ],
     upload: { path: `changelog/build/${file}`, days: 90, archive: false },
   };
 }
-
-export function loadVersions(
-  key = "versions",
-  file = STONECUTTER_FILE,
-): SCProjectsByVersion {
-  const toml = readFileSync(file, "utf8");
-  const versions = TOML.parse(toml)[key];
-  return SCProjectsByVersionSchema.parse(versions);
-}
-
-export function loadMatrixJobs(
-  key = "build",
-  file = MATRIX_JOBS_FILE,
-): MatrixJob[] {
-  const toml = readFileSync(file, "utf8");
-  const jobs = TOML.parse(toml)[key] ?? [];
-  return MatrixJobsFileSchema.parse(jobs);
-}
-
 if (import.meta.main) {
   await run(app, process.argv.slice(2), { process: process as StricliProcess });
 }
