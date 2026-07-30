@@ -51,15 +51,6 @@ If you'd like to translate a language we don't currently target, please [open an
 | Horizontal Speed | The horizontal speed of freecam.                                                                                                                            | `1.0`         |
 | Vertical Speed   | The vertical speed of freecam.                                                                                                                              | `1.0`         |
 
-## Collision Options
-
-| Name                           | Description                                                                                          | Default Value |
-|--------------------------------|------------------------------------------------------------------------------------------------------|---------------|
-| Ignore Transparent Blocks      | Allows travelling through transparent blocks in freecam.                                             | `true`        |
-| Ignore Openable Blocks         | Allows travelling through doors/trapdoors/gates in freecam.                                          | `true`        |
-| Ignore All Collision           | Allows travelling through all blocks in freecam.                                                     | `true`        |
-| Always Check Initial Collision | Whether **Initial Perspective** should check for collision, even when using **Ignore All Collision** | `false`       |
-
 ## Visual Options
 
 | Name                | Description                                                                                                                                                                                                                                         | Default Value |
@@ -93,6 +84,3 @@ If you'd like to translate a language we don't currently target, please [open an
 ### Fabric
 - [Fabric API](https://modrinth.com/mod/fabric-api)
 - [Mod Menu](https://modrinth.com/mod/modmenu) (Optional)
-
-### Forge
-- None

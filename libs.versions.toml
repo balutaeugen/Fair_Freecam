@@ -7,7 +7,6 @@ fabric-loom = "1.17-SNAPSHOT"
 fabric-loader = "0.19.3"
 mapping-io = "0.8.0"
 mixin = "0.8.5"
-moddev = "2.0.140"
 fletchingtable = "0.1.0-alpha.23"
 foojay-resolver = "1.0.0"
 tomlkt = "0.6.0"
@@ -38,11 +37,8 @@ shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 stonecutter = { id = "dev.kikugie.stonecutter", version.ref = "stonecutter" }
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
 fabric-loom-remap = { id = "net.fabricmc.fabric-loom-remap", version.ref = "fabric-loom" }
-moddev = { id = "net.neoforged.moddev", version.ref = "moddev" }
-moddev-legacy = {id = "net.neoforged.moddev.legacyforge", version.ref = "moddev"}
 fletchingtable = { id = "dev.kikugie.fletching-table", version.ref = "fletchingtable" }
 fletchingtable-fabric = { id = "dev.kikugie.fletching-table.fabric", version.ref = "fletchingtable" }
-fletchingtable-neoforge = { id = "dev.kikugie.fletching-table.neoforge", version.ref = "fletchingtable" }
 foojay-resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojay-resolver" }
 jetbrains-changelog = { id = "org.jetbrains.changelog", version.ref = "jetbrains-changelog" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

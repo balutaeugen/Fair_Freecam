@@ -23,12 +23,6 @@ pluginManagement {
             filter { includeGroupAndSubgroups("net.fabricmc") }
         }
         exclusiveContent {
-            forRepository {
-                maven("https://maven.neoforged.net/releases") { name = "Neoforge" }
-            }
-            filter { includeGroupAndSubgroups( "net.neoforged") }
-        }
-        exclusiveContent {
             forRepositories(
                 maven("https://maven.kikugie.dev/releases") { name = "KikuGie" },
                 maven("https://maven.kikugie.dev/snapshots") { name = "KikuGie snapshots" },

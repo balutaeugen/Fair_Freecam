@@ -1,8 +1,8 @@
 [key.category.freecam]
-controls = "Freecam"
+controls = "Fair Freecam"
 
 [key.freecam]
-toggle = "Freecamの切り替え"
+toggle = "Fair Freecamの切り替え"
 
   [key.freecam.controlPlayer]
   toggle = "プレーヤーコントロール"

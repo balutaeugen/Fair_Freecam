@@ -29,20 +29,6 @@ tasks.named<Jar>("jar") {
 }
 
 repositories {
-    maven("https://maven.neoforged.net/releases") {
-        name = "NeoForge"
-        content { includeGroup("net.neoforged") }
-    }
-    meta.deps["neoforge_pr"].takeUnless { it.isNullOrBlank() }?.let {
-        exclusiveContent {
-            forRepository {
-                maven("https://prmaven.neoforged.net/NeoForge/pr$it") {
-                    name = "NeoForge PR#$it"
-                }
-            }
-            filter { includeModule("net.neoforged", "neoforge") }
-        }
-    }
     exclusiveContent {
         forRepository {
             maven("https://maven.fabricmc.net") { name = "Fabric" }

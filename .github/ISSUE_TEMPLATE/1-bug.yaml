@@ -81,7 +81,5 @@ body:
       description: Select the platform(s) you've seen this issue on
       options:
         - label: Fabric
-        - label: Neoforge
-        - label: Forge
     validations:
       required: true

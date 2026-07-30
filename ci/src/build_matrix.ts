@@ -57,7 +57,7 @@ export function buildVersionMatrix(
   version: string,
   versions: SCProjectsByVersion,
 ): MatrixJob[] {
-  const loaders = ["fabric", "forge", "neoforge"];
+  const loaders = ["fabric"];
   const matrix: MatrixJob[] = [];
 
   for (const [key, branches] of Object.entries(versions)) {
