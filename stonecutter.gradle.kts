@@ -86,7 +86,7 @@ stonecutter parameters {
 }
 
 dependencies {
-    sequenceOf("fabric", "forge", "neoforge")
+    sequenceOf("fabric")
         .mapNotNull { sc.tree[it] }
         .flatMap { it.nodes }
         .forEach {

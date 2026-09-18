@@ -1,6 +1,6 @@
 [freecam.msg]
-enabled = "Freecam ativado."
-disabled = "Freecam desativado."
+enabled = "Fair Freecam ativado."
+disabled = "Fair Freecam desativado."
 invalidRegex = "Expressão inválida: %s"
 
   [freecam.msg.tripod]

@@ -1,8 +1,8 @@
 [key.category.freecam]
-controls = "Freecam"
+controls = "Fair Freecam"
 
 [key.freecam]
-toggle = "Freecam Aç/Kapa"
+toggle = "Fair Freecam Aç/Kapa"
 
   [key.freecam.controlPlayer]
   toggle = "Oyuncuyu Kontrol Et"

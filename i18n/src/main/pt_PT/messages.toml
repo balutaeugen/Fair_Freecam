@@ -1,6 +1,6 @@
 [freecam.msg]
-enabled = "Freecam habilitado."
-disabled = "Freecam desabilitado."
+enabled = "Fair Freecam habilitado."
+disabled = "Fair Freecam desabilitado."
 invalidRegex = "Expressão inválida: %s"
 
   [freecam.msg.tripod]
@@ -9,4 +9,4 @@ invalidRegex = "Expressão inválida: %s"
   reset = "Redefinir câmara %s"
 
   [freecam.msg.restricted]
-  server = "O Freecam é restrito neste servidor (%s)."
+  server = "O Fair Freecam é restrito neste servidor (%s)."

@@ -29,42 +29,6 @@ tooltip = "طوری که دوربین حرکت میکند."
     label = "سرعت عمودی"
     tooltip = "سرعت عمودی فری کم."
 
-[freecam.config.collision]
-label = "تنظیمات برخورد"
-tooltip = "بلاک هایی که در فری کم می توانید از آن رد شوید."
-
-  [freecam.config.collision.ignoreAll]
-  label = "نادیده گرفتن تمامی برخورد ها"
-  "tooltip[0]" = "به عبور از همه ی بلاک ها اجازه می دهد."
-  "tooltip[1]" = "§eتنظیمات بالا را نادیده می گیرد."
-
-  [freecam.config.collision.ignoreTransparent]
-  label = "نادیده گرفتن بلاک های شفاف"
-  tooltip = "به رد شدن از بلاک های شفاف در فری کم اجازه می دهد."
-
-  [freecam.config.collision.ignoreOpenable]
-  label = "نادیده گرفتن بلاک های قابل باز شدن"
-  tooltip = "به رد شدن از در ها/دریچه ها/دروازه ها در فری کم اجازه می دهد."
-
-  [freecam.config.collision.ignoreCustom]
-  label = "لیست نادیده گرفتن شخصی سازی شده"
-  tooltip = "به رد شدن از بلاک خاص در فری کم اجازه می دهد."
-
-[freecam.config.collision.whitelist.ids]
-label = "نادیده گرفتن آی دی ها"
-"tooltip[0]" = 'از آی دی بلاک استفاده کنید، مثل "grass_block".'
-"tooltip[1]" = 'اگر namespace داده نشود، "minecraft:" فرض می شود.'
-
-[freecam.config.collision.whitelist.patterns]
-label = "نادیده گرفتن عبارت های Regular Expression"
-"tooltip[0]" = "از ترکیب Regular Expression استفاده کنید."
-"tooltip[1]" = 'با آی دی کامل بلاک مفایسه می شود، مثل "minecraft:grass_block".'
-
-  [freecam.config.collision.alwaysCheck]
-  label = "بررسی همیشگی برخورد اولیه"
-  "tooltip[0]" = "اینکه §7دید اولیه§r باید برای برخورد چک کند، حتی"
-  "tooltip[1]" = "موقع استفاده از §7نادیده کرفتن تمامی برخورد ها§r."
-
 [freecam.config.visual]
 label = "تنظیمات بصری"
 tooltip = "ظاهر فری کم."

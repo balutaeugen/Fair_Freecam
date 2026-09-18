@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { CHANGELOG_FILE } from "./project_files.ts";
-import { readVersion, MetadataError } from "./read_version.ts";
 
 export class LintError extends Error {
   constructor(message: string) {
@@ -57,7 +56,7 @@ function parseChangelog(text: string): ParseResult {
   return { unreleasedLine, releases, oldFormatReleases, footerLinks };
 }
 
-export function lint(version: string, changelogFile: string): void {
+export function lint(changelogFile: string): void {
   if (!fs.existsSync(changelogFile)) {
     throw new LintError(`${path.basename(changelogFile)} not found`);
   }
@@ -74,12 +73,10 @@ export function lint(version: string, changelogFile: string): void {
 
   const { unreleasedLine, releases, oldFormatReleases, footerLinks } =
     parseChangelog(text);
+  const latestRelease = releases.keys().next().value;
 
-  if (!releases.has(version)) {
-    throw new LintError(
-      `Changelog has no release section for version ${version} ` +
-        "(did you forget to run patchChangelog?)",
-    );
+  if (!latestRelease) {
+    throw new LintError("Changelog has no release sections");
   }
 
   if (unreleasedLine) {
@@ -96,22 +93,15 @@ export function lint(version: string, changelogFile: string): void {
     throw new LintError(`Unexpected footer links (${footerLinks.size})`);
   }
 
-  console.log(`Changelog OK for version ${version}`);
+  console.log(`Changelog OK for upstream version ${latestRelease}`);
 }
 
 export function main(): void {
   try {
-    const version = readVersion();
-    lint(version, CHANGELOG_FILE);
+    lint(CHANGELOG_FILE);
   } catch (e) {
     if (e instanceof LintError) {
       console.error("Changelog lint failed:\n");
-      console.error(`- ${e.message}`);
-      process.exit(1);
-    }
-
-    if (e instanceof MetadataError) {
-      console.error("Changelog lint failed to read metadata:\n");
       console.error(`- ${e.message}`);
       process.exit(1);
     }

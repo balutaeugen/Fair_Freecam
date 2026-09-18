@@ -1,6 +1,5 @@
 package net.xolt.freecam.config;
 
-import net.minecraft.world.level.block.Block;
 import net.xolt.freecam.Freecam;
 import net.xolt.freecam.config.controller.BasicConfigController;
 import net.xolt.freecam.config.controller.ConfigController;
@@ -49,12 +48,6 @@ public interface ModConfig {
 
     double getVerticalSpeed();
 
-    boolean ignoreAllCollision();
-
-    boolean shouldCheckInitialCollision();
-
-    boolean ignoreCollisionWith(Block block);
-
     Perspective getInitialPerspective();
 
     boolean shouldShowPlayer();
@@ -82,8 +75,6 @@ public interface ModConfig {
     boolean shouldFreezePlayer();
 
     boolean shouldPreventInteractions();
-
-    boolean allowInteractionsFromCamera();
 
     boolean allowInteractionsFromPlayer();
 

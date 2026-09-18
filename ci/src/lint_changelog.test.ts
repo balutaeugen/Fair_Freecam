@@ -8,7 +8,7 @@ import { lint, LintError } from "./lint_changelog.ts";
 describe("lint_changelog", () => {
   it("lint accepts valid changelog", () => {
     const fixture = path.resolve(FIXTURES, "ok_current_version.md");
-    assert.doesNotThrow(() => lint("1.2.3", fixture));
+    assert.doesNotThrow(() => lint(fixture));
   });
 
   describe("lint throws for:", () => {
@@ -20,7 +20,7 @@ describe("lint_changelog", () => {
     for (const { name, filename } of fixtures) {
       it(name, () => {
         const fixture = path.resolve(FIXTURES, filename);
-        assert.throws(() => lint("1.2.3", fixture), LintError);
+        assert.throws(() => lint(fixture), LintError);
       });
     }
   });

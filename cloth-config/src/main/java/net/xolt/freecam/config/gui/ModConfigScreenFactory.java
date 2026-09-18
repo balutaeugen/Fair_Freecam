@@ -78,7 +78,6 @@ public class ModConfigScreenFactory {
         Stream.of(
                 controlsCategory(entryBuilder),
                 movementCategory(entryBuilder),
-                collisionCategory(entryBuilder),
                 visualCategory(entryBuilder),
                 utilityCategory(entryBuilder),
                 serversCategory(entryBuilder),
@@ -148,103 +147,6 @@ public class ModConfigScreenFactory {
                 flightMode,
                 horizontalSpeed,
                 verticalSpeed
-        ).forEach(builder::add);
-
-        return builder.build();
-    }
-
-    /**
-     * @param entryBuilder {@link ConfigEntryBuilder cloth-config entry builder}
-     * @return the collision sub-category
-     */
-    private SubCategoryListEntry collisionCategory(ConfigEntryBuilder entryBuilder) {
-        SubCategoryBuilder builder = entryBuilder.startSubCategory(Component.translatable("freecam.config.collision.label"))
-                .setTooltip(Component.translatable("freecam.config.collision.tooltip"));
-
-        BooleanListEntry ignoreAll = entryBuilder.startBooleanToggle(
-                        Component.translatable("freecam.config.collision.ignoreAll.label"),
-                        config().collision.ignoreAll)
-                .setTooltip(
-                        Component.translatable("freecam.config.collision.ignoreAll.tooltip[0]"),
-                        Component.translatable("freecam.config.collision.ignoreAll.tooltip[1]")
-                )
-                .setDefaultValue(defaults().collision.ignoreAll)
-                .setSaveConsumer(value -> config().collision.ignoreAll = value)
-                .build();
-
-        BooleanListEntry ignoreTransparent = entryBuilder.startBooleanToggle(
-                        Component.translatable("freecam.config.collision.ignoreTransparent.label"),
-                        config().collision.ignoreTransparent)
-                //? if cloth_dependencies
-                .setRequirement(() -> !ignoreAll.getValue())
-                .setTooltip(Component.translatable("freecam.config.collision.ignoreTransparent.tooltip"))
-                .setDefaultValue(defaults().collision.ignoreTransparent)
-                .setSaveConsumer(value -> config().collision.ignoreTransparent = value)
-                .build();
-
-        BooleanListEntry ignoreOpenable = entryBuilder.startBooleanToggle(
-                        Component.translatable("freecam.config.collision.ignoreOpenable.label"),
-                        config().collision.ignoreOpenable)
-                //? if cloth_dependencies
-                .setRequirement(() -> !ignoreAll.getValue())
-                .setTooltip(Component.translatable("freecam.config.collision.ignoreOpenable.tooltip"))
-                .setDefaultValue(defaults().collision.ignoreOpenable)
-                .setSaveConsumer(value -> config().collision.ignoreOpenable = value)
-                .build();
-
-        BooleanListEntry ignoreCustom = entryBuilder.startBooleanToggle(
-                        Component.translatable("freecam.config.collision.ignoreCustom.label"),
-                        config().collision.ignoreCustom)
-                //? if cloth_dependencies
-                .setRequirement(() -> !ignoreAll.getValue())
-                .setTooltip(Component.translatable("freecam.config.collision.ignoreCustom.tooltip"))
-                .setDefaultValue(defaults().collision.ignoreCustom)
-                .setSaveConsumer(value -> config().collision.ignoreCustom = value)
-                .build();
-
-        StringListListEntry idWhitelist = entryBuilder.startStrList(
-                        Component.translatable("freecam.config.collision.whitelist.ids.label"),
-                        config().collision.whitelist.ids)
-                .setTooltip(
-                        Component.translatable("freecam.config.collision.whitelist.ids.tooltip[0]"),
-                        Component.translatable("freecam.config.collision.whitelist.ids.tooltip[1]"))
-                //? if cloth_dependencies
-                .setDisplayRequirement(ignoreCustom::getValue)
-                .setDefaultValue(defaults().collision.whitelist.ids)
-                .setSaveConsumer(value -> config().collision.whitelist.ids = value)
-                .build();
-
-        StringListListEntry patternWhitelist = entryBuilder.startStrList(
-                        Component.translatable("freecam.config.collision.whitelist.patterns.label"),
-                        config().collision.whitelist.patterns)
-                .setTooltip(
-                        Component.translatable("freecam.config.collision.whitelist.patterns.tooltip[0]"),
-                        Component.translatable("freecam.config.collision.whitelist.patterns.tooltip[1]"))
-                //? if cloth_dependencies
-                .setDisplayRequirement(ignoreCustom::getValue)
-                .setDefaultValue(defaults().collision.whitelist.patterns)
-                .setSaveConsumer(value -> config().collision.whitelist.patterns = value)
-                .build();
-
-        BooleanListEntry alwaysCheck = entryBuilder.startBooleanToggle(
-                        Component.translatable("freecam.config.collision.alwaysCheck.label"),
-                        config().collision.alwaysCheck)
-                .setTooltip(
-                        Component.translatable("freecam.config.collision.alwaysCheck.tooltip[0]"),
-                        Component.translatable("freecam.config.collision.alwaysCheck.tooltip[1]"))
-                .setDefaultValue(defaults().collision.alwaysCheck)
-                .setSaveConsumer(value -> config().collision.alwaysCheck = value)
-                .build();
-
-        // Add entries to the sub-category
-        Stream.of(
-                ignoreTransparent,
-                ignoreOpenable,
-                ignoreCustom,
-                idWhitelist,
-                patternWhitelist,
-                ignoreAll,
-                alwaysCheck
         ).forEach(builder::add);
 
         return builder.build();

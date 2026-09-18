@@ -6,8 +6,8 @@ plugins {
 }
 
 val sourceDir = layout.projectDirectory.dir("src/main")
-val iconBackground = Color(0x002a36)
-val iconForeground = Color(0x00607c)
+val iconBackground = Color(0x850000)
+val iconForeground = Color(0xd40000)
 
 val Color.xmlHexRgb
     get() = (rgb and 0xffffff).toHexString(HexFormat {

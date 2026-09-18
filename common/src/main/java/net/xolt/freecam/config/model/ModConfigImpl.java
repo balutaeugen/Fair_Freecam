@@ -1,16 +1,13 @@
 package net.xolt.freecam.config.model;
 
-import net.minecraft.world.level.block.Block;
 import net.xolt.freecam.config.ModConfig;
 
 public class ModConfigImpl implements ModConfig {
 
     private final ModConfigDTO data;
-    private final CollisionPredicate collisionPredicate;
 
     public ModConfigImpl(ModConfigDTO data) {
         this.data = data;
-        collisionPredicate = CollisionPredicate.create(data.collision);
     }
 
     public ModConfigDTO getData() {
@@ -30,21 +27,6 @@ public class ModConfigImpl implements ModConfig {
     @Override
     public double getVerticalSpeed() {
         return data.movement.verticalSpeed;
-    }
-
-    @Override
-    public boolean ignoreAllCollision() {
-        return data.collision.ignoreAll;
-    }
-
-    @Override
-    public boolean shouldCheckInitialCollision() {
-        return data.collision.alwaysCheck || !data.collision.ignoreAll;
-    }
-
-    @Override
-    public boolean ignoreCollisionWith(Block block) {
-        return data.collision.ignoreAll || collisionPredicate.shouldIgnore(block);
     }
 
     @Override
@@ -89,11 +71,6 @@ public class ModConfigImpl implements ModConfig {
 
     public boolean allowInteractionsFrom(ModConfigDTO.InteractionMode mode) {
         return data.utility.allowInteract && data.utility.interactionMode == mode;
-    }
-
-    @Override
-    public boolean allowInteractionsFromCamera() {
-        return allowInteractionsFrom(ModConfigDTO.InteractionMode.CAMERA);
     }
 
     @Override

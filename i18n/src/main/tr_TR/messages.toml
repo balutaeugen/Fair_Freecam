@@ -1,6 +1,6 @@
 [freecam.msg]
-enabled = "Freecam açıldı."
-disabled = "Freecam kapatıldı."
+enabled = "Fair Freecam açıldı."
+disabled = "Fair Freecam kapatıldı."
 invalidRegex = "Geçersiz düzenli ifade: %s"
 
   [freecam.msg.tripod]

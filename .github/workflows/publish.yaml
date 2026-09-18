@@ -15,9 +15,6 @@ on:
        MODRINTH_TOKEN:
          description: Modrinth API token (required unless dry-run)
          required: false
-       CURSEFORGE_TOKEN:
-         description: CurseForge API token (required unless dry-run)
-         required: false
     outputs: {}
 
 permissions: {}
@@ -47,12 +44,6 @@ jobs:
             CHANGELOG.md
           sparse-checkout-cone-mode: false
 
-      - name: Install Knope
-        uses: knope-dev/action@v2.1.2
-        with:
-          # TODO: keep up to date
-          version: 0.23.0
-
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
@@ -61,7 +52,15 @@ jobs:
 
       - name: Prepare Release Notes
         run: |
-          knope print-release-notes > release-notes.md
+          awk '
+            /^## / {
+              if (found) exit
+              found = 1
+              next
+            }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          test -s release-notes.md
 
       - name: Prepare Release Metadata
         run: |
@@ -76,33 +75,100 @@ jobs:
 
       - name: Publish GitHub Release
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+          dry_run: ${{ inputs.dry-run || '' }}
         run: |
-          knope release ${{ inputs.dry-run && '--dry-run' || '' }}
+          set -euo pipefail
 
-      - name: Setup Java
-        uses: actions/setup-java@v5
-        with:
-          java-version: '21'
-          distribution: temurin
+          metadata=artifacts/release-metadata.json
+          version="$(jq -r .mod_version "$metadata")"
+          release_type="$(jq -r .release_type "$metadata")"
+          tag="v$version"
 
-      - name: Setup Freecam Publisher
-        uses: MinecraftFreecam/Publisher@v0.0.6
+          if [ -n "$dry_run" ]; then
+            echo "Dry run: would create GitHub release $tag"
+            exit 0
+          fi
 
-      - name: Publish to CurseForge & Modrinth
+          args=(
+            "$tag"
+            artifacts/*
+            --title "$version"
+            --notes-file release-notes.md
+          )
+          if [ "$release_type" != "release" ]; then
+            args+=(--prerelease)
+          fi
+
+          gh release create "${args[@]}"
+
+      - name: Publish to Modrinth
         env:
           dry_run: ${{ inputs.dry-run || '' }}
           MODRINTH_TOKEN: ${{ inputs.dry-run && 'token' || secrets.MODRINTH_TOKEN }}
-          CURSEFORGE_TOKEN: ${{ inputs.dry-run && 'token' || secrets.CURSEFORGE_TOKEN }}
         run: |
-          echo "::notice::Using $(freecam-publish --version)"
-          args=(
-            --release-notes release-notes.md
-            --metadata artifacts/release-metadata.json
-            artifacts
+          set -euo pipefail
+
+          metadata=artifacts/release-metadata.json
+          project_id="$(jq -r .platforms.modrinth.project_id "$metadata")"
+          mod_version="$(jq -r .mod_version "$metadata")"
+          changelog="$(cat release-notes.md)"
+          release_type="$(
+            jq -r '
+              if .release_type == "release" then "release"
+              elif .release_type == "alpha" then "alpha"
+              else "beta"
+              end
+            ' "$metadata"
           )
-          if [ -n "$dry_run" ]; then
-            echo "Dry run:"
-            args+=( --dry-run )
-          fi
-          freecam-publish "${args[@]}"
+
+          while IFS= read -r version; do
+            filename="$(jq -r .filename <<< "$version")"
+            artifact="artifacts/$filename"
+            test -f "$artifact" || {
+              echo "::error::Missing release artifact: $filename"
+              exit 1
+            }
+
+            jq -n \
+              --arg project_id "$project_id" \
+              --arg name "$(jq -r .display_name <<< "$version")" \
+              --arg version_number "$mod_version" \
+              --arg changelog "$changelog" \
+              --arg version_type "$release_type" \
+              --arg loader "$(jq -r .loader <<< "$version")" \
+              --argjson game_versions "$(
+                jq '[.game_versions[] | select(endswith("-snapshot") | not)]' <<< "$version"
+              )" \
+              --argjson dependencies "$(
+                jq '[.relationships[] | {
+                  project_id: .modrinth_id,
+                  dependency_type: (if .type == "bundled" then "embedded" else .type end)
+                }]' <<< "$version"
+              )" \
+              '{
+                project_id: $project_id,
+                name: $name,
+                version_number: $version_number,
+                changelog: $changelog,
+                dependencies: $dependencies,
+                game_versions: $game_versions,
+                version_type: $version_type,
+                loaders: [$loader],
+                featured: false,
+                file_parts: ["file"],
+                primary_file: "file"
+              }' > modrinth-version.json
+
+            if [ -n "$dry_run" ]; then
+              echo "Dry run: would publish $filename to Modrinth project $project_id"
+            else
+              curl --fail-with-body \
+                --request POST \
+                --header "Authorization: $MODRINTH_TOKEN" \
+                --header "User-Agent: $GITHUB_REPOSITORY release workflow" \
+                --form "data=@modrinth-version.json;type=application/json" \
+                --form "file=@$artifact;type=application/java-archive" \
+                https://api.modrinth.com/v2/version
+            fi
+          done < <(jq -c '.versions[]' "$metadata")
