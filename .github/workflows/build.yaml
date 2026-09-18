@@ -1,17 +1,12 @@
 name: Build
 
 on:
-  push:
-    branches-ignore:
-      - 'release/**'
-  pull_request:
-
-# Group workflow runs by event and ref.
-# New runs cancel any pending run.
-# PR runs also cancel in-progress runs.
-concurrency:
-  group: build-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name != 'push' }}
+  workflow_call:
+    inputs:
+      matrix:
+        description: JSON build matrix
+        required: true
+        type: string
 
 permissions: {}
 
@@ -20,27 +15,16 @@ defaults:
     shell: bash
 
 jobs:
-  prepare:
-    name: Setup
-    uses: ./.github/workflows/prepare.yaml
-    permissions:
-      contents: read
-    with:
-      changelog: ${{ github.event_name != 'push' }}
-      release: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
-      matrix: true
-
   build:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
 
-    needs: prepare
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJson(needs.prepare.outputs.matrix) }}
+        include: ${{ fromJson(inputs.matrix) }}
     timeout-minutes: 120
 
     steps:

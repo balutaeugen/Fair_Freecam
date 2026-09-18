@@ -26,14 +26,12 @@ export function main(args: CliOptions) {
     SCProjectsByVersionSchema.parse(versionsToml.versions),
   );
 
-  const changelogJobs = args.changelog ? [buildChangelogJob(args.release)] : [];
-
   const staticJobs = matrixJobsToml
     ? MatrixJobsFileSchema.parse(matrixJobsToml).builds
     : [];
 
-  const matrix = [...changelogJobs, ...staticJobs, ...versionJobs].sort(
-    (a, b) => a.name.localeCompare(b.name),
+  const matrix = [...staticJobs, ...versionJobs].sort((a, b) =>
+    a.name.localeCompare(b.name),
   );
 
   if (args.release) {
@@ -82,21 +80,6 @@ export function buildVersionMatrix(
   return matrix;
 }
 
-export function buildChangelogJob(
-  release = false,
-  file = "changelog.md",
-): MatrixJob {
-  return {
-    name: "Changelog",
-    gradle_args: [
-      "--project-dir=changelog",
-      ":getChangelog",
-      ...(release ? [] : ["--unreleased"]),
-      `--output-file=build/${file}`,
-    ],
-    upload: { path: `changelog/build/${file}`, days: 90, archive: false },
-  };
-}
 if (import.meta.main) {
   await run(app, process.argv.slice(2), { process: process as StricliProcess });
 }

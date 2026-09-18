@@ -42,9 +42,10 @@ repositories {
         filter { includeGroupAndSubgroups("org.spongepowered") }
     }
     exclusiveContent {
-        forRepository {
-            maven("https://maven.shedaniel.me") { name = "Shedaniel" }
-        }
+        forRepositories(
+            maven("https://maven.shedaniel.me") { name = "Shedaniel" },
+            maven("https://maven.architectury.dev" ) { name = "Architectury" },
+        )
         filter { includeGroup("me.shedaniel.cloth") }
     }
     exclusiveContent {
@@ -68,6 +69,13 @@ repositories {
     mavenCentral()
 }
 
+val extraResources = configurations.create("extraResources") {
+    description = "Additional resources added to processResources."
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
 tasks.processResources {
+    from(extraResources)
     dependsOn(tasks.named("stonecutterGenerate"))
 }

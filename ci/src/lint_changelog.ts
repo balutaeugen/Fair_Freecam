@@ -10,17 +10,21 @@ export class LintError extends Error {
 }
 
 type ParseResult = {
-  unreleasedLine: number | null;
+  unreleasedLine: boolean;
   releases: Map<string, number>;
+  oldFormatReleases: Set<string>;
   footerLinks: Set<string>;
 };
 
 function parseChangelog(text: string): ParseResult {
-  let unreleasedLine: number | null = null;
+  let unreleasedLine: boolean = false;
   const releases = new Map<string, number>();
+  const oldFormatReleases = new Set<string>();
   const footerLinks = new Set<string>();
 
-  const headerRe = /^## \[(?<name>[^\]]+)]/;
+  const headerRe = /^## (?<name>[-.0-9a-zA-Z]+) \((?<date>\d{4}-\d\d-\d\d)\)$/;
+  const oldHeaderRe = /^## \[(?<name>[^\]]+)]/;
+  const unreleasedRe = /^## \[?unreleased\]?/i;
   const footerRe = /^\[(?<name>[^\]]+)]:/;
 
   const lines = text.split("\n");
@@ -29,15 +33,18 @@ function parseChangelog(text: string): ParseResult {
     const line = raw.replace(/\r$/, ""); // mimic rstrip for CRLF detection
     const lineNo = idx + 1;
 
+    if (line.match(unreleasedRe)) {
+      unreleasedLine = true;
+    }
+
     const headerMatch = line.match(headerRe);
     if (headerMatch?.groups?.name) {
-      const name = headerMatch.groups.name;
-      if (name === "Unreleased") {
-        unreleasedLine = lineNo;
-      } else {
-        releases.set(name, lineNo);
-      }
-      return;
+      releases.set(headerMatch.groups.name, lineNo);
+    }
+
+    const oldHeaderMatch = line.match(oldHeaderRe);
+    if (oldHeaderMatch?.groups?.name) {
+      oldFormatReleases.add(oldHeaderMatch.groups.name);
     }
 
     const footerMatch = line.match(footerRe);
@@ -46,7 +53,7 @@ function parseChangelog(text: string): ParseResult {
     }
   });
 
-  return { unreleasedLine, releases, footerLinks };
+  return { unreleasedLine, releases, oldFormatReleases, footerLinks };
 }
 
 export function lint(changelogFile: string): void {
@@ -64,33 +71,29 @@ export function lint(changelogFile: string): void {
     );
   }
 
-  const { unreleasedLine, releases, footerLinks } = parseChangelog(text);
-  const latestRelease = releases.entries().next().value;
+  const { unreleasedLine, releases, oldFormatReleases, footerLinks } =
+    parseChangelog(text);
+  const latestRelease = releases.keys().next().value;
 
   if (!latestRelease) {
     throw new LintError("Changelog has no release sections");
   }
-  const [version, releaseLine] = latestRelease;
 
-  if (unreleasedLine === null) {
-    throw new LintError("Changelog is missing an [Unreleased] section");
+  if (unreleasedLine) {
+    throw new LintError("Unexpected 'Unreleased' section");
   }
 
-  if (unreleasedLine > releaseLine) {
+  if (oldFormatReleases.size > 0) {
     throw new LintError(
-      "[Unreleased] section must appear before the current release section",
+      `Unexpected releases using the old format (${oldFormatReleases.size})`,
     );
   }
 
-  if (!footerLinks.has("Unreleased")) {
-    throw new LintError("Missing footer link for [Unreleased]");
+  if (footerLinks.size > 0) {
+    throw new LintError(`Unexpected footer links (${footerLinks.size})`);
   }
 
-  if (!footerLinks.has(version)) {
-    throw new LintError(`Missing footer link for version ${version}`);
-  }
-
-  console.log(`Changelog OK for version ${version}`);
+  console.log(`Changelog OK for upstream version ${latestRelease}`);
 }
 
 export function main(): void {

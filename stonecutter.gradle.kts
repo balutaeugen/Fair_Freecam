@@ -85,57 +85,13 @@ stonecutter parameters {
     }
 }
 
-val releaseNotes by configurations.registering {
-    isCanBeConsumed = false
-    isCanBeResolved = true
-}
-
 dependencies {
-    releaseNotes(project(":changelog", configuration = "releaseNotes"))
-
-    sequenceOf("fabric", "forge", "neoforge")
+    sequenceOf("fabric")
         .mapNotNull { sc.tree[it] }
         .flatMap { it.nodes }
         .forEach {
             releaseMetadata(project(it.project.path, configuration = "releaseMetadataElements"))
         }
-}
-
-tasks.generateReleaseMetadata {
-    changelog = releaseNotes.map { it.singleFile.readText() }
-
-    // FIXME: the :changelog outgoing artifact should encode its dependencies,
-    //  this project shouldn't need to know about the underlying task.
-    //  See https://github.com/gradle/gradle/issues/24131
-    dependsOn(gradle.includedBuild("changelog").task(":getReleaseNotes"))
-}
-
-tasks.register("chiseledBuild") {
-    group = "project"
-    dependsOn(stonecutter.tasks.named("build"))
-
-    doLast {
-        val artifactsDir = rootProject.layout.projectDirectory.dir("artifacts").asFile
-        artifactsDir.deleteRecursively()
-        artifactsDir.mkdirs()
-
-        for (node in stonecutter.tree.nodes) {
-            val loader = node.branch.id
-            // Only collect from loader subprojects, skip common/cloth-config
-            if (loader in setOf("common", "cloth-config", "")) continue
-
-            val mcVersion = node.metadata.version
-            val libsDir = node.project.layout.buildDirectory.dir("libs").get().asFile
-            if (!libsDir.exists()) continue
-
-            val dest = File(artifactsDir, "$mcVersion/$loader")
-            dest.mkdirs()
-
-            libsDir.listFiles()
-                ?.filter { it.extension == "jar" && "-dev" !in it.name }
-                ?.forEach { it.copyTo(File(dest, it.name), overwrite = true) }
-        }
-    }
 }
 
 tasks.named<Wrapper>("wrapper") {
