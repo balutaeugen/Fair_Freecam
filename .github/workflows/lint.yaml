@@ -1,23 +1,22 @@
-name: Checks
+name: Lint
 
 on:
-  pull_request:
-
-# Group workflow runs by ref.
-# New runs cancel any pending run.
-# In-progress runs are allowed to complete.
-concurrency:
-  group: check-${{ github.ref }}
+  workflow_call:
 
 defaults:
   run:
     shell: bash
+
+permissions: {}
 
 jobs:
   validate:
     name: Validation
     runs-on: ubuntu-slim
     timeout-minutes: 30
+
+    permissions:
+      contents: read
 
     env:
       RUFF_OUTPUT_FORMAT: github
@@ -37,6 +36,7 @@ jobs:
             package.json
             package-lock.json
           sparse-checkout-cone-mode: false
+          persist-credentials: false
 
       - name: Install CI dependencies
         run: npm ci
@@ -46,3 +46,22 @@ jobs:
 
       - name: Lint changelog
         run: node ci/src/lint_changelog.ts
+
+  zizmor:
+    name: Zizmor
+    runs-on: ubuntu-latest # zizmor-action requires docker
+
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@v0.6.4

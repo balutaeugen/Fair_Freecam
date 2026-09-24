@@ -8,6 +8,8 @@ pkgs.callPackage (
     mkShellNoCC,
     javaPackages,
     nodejs_24,
+    knope,
+    zizmor,
   }:
   mkShellNoCC {
     name = "freecam";
@@ -15,6 +17,8 @@ pkgs.callPackage (
     packages = [
       javaPackages.compiler.openjdk21
       nodejs_24
+      knope
+      zizmor
     ];
     shellHook = ''
       ( cd "$project_dir" && npm ci )

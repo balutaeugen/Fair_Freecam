@@ -1,3 +1,8 @@
+// Improve dependency graph ordering
+// https://docs.gradle.org/9.7.0/userguide/upgrading_version_9.html#dependency_resolution_ordering
+// TODO: remove when it's the default (in Gradle 10)
+enableFeaturePreview("ENHANCED_GRAPH_ORDERING")
+
 dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
@@ -44,8 +49,9 @@ stonecutter {
     create(rootProject, file("stonecutter.settings.toml"))
 }
 
-include("config", "i18n")
+include("branding", "config", "i18n")
 
+// Fair_Freecam's release workflow consumes the changelog build output.
 includeBuild("changelog")
 
 rootProject.name = "freecam"

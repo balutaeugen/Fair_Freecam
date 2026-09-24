@@ -42,6 +42,7 @@ include(
     "shadow",
     "release-metadata",
     "settings",
+    "svg-plugin",
 )
 
 project(":api:plugin").projectDir = file("api-plugin")

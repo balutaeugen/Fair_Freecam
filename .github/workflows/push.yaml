@@ -1,0 +1,74 @@
+name: Push
+
+on:
+  # Most CI happens on pull requests, but we also have some automation on pushes to release branches.
+  push:
+    branches:
+      # Mainline releases are published from the `main` branch.
+      - main
+      # Followup releases may be published from version branches, e.g. `version/1.2.3`.
+      # This is useful when `main` has diverged from the base release.
+      - version/*
+
+# Group workflow runs by ref.
+# New runs cancel any pending run.
+# In-progress runs are allowed to complete.
+concurrency:
+  group: push-${{ github.ref }}
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  prepare:
+    name: Setup
+    uses: ./.github/workflows/prepare.yaml
+    permissions:
+      contents: read
+    with:
+      release: true
+      matrix: true
+
+  create_release_pr:
+    # Create a release PR unless this push event is the result of merging a release PR.
+    # If `prepare` finds un unpublished version, that means a release PR was merged.
+    if: ${{ !needs.prepare.outputs.unreleased }}
+
+    name: Release PR
+    uses: ./.github/workflows/create-release-pr.yaml
+    needs: prepare
+    permissions:
+      contents: write
+      pull-requests: write
+    secrets:
+      FREECAM_CI_APP_PRIVATE_KEY: ${{ secrets.FREECAM_CI_APP_PRIVATE_KEY }}
+
+  build:
+    # Only build on:push when we need to publish a release
+    # Strictly speaking, we could run into cases where an outdated PR builds ok, but it fails when merged.
+    # However, we're much more likely to notice that now that we create release PRs on every push.
+    if: needs.prepare.outputs.unreleased
+
+    name: Build
+    uses: ./.github/workflows/build.yaml
+    needs: prepare
+    permissions:
+      contents: read
+    with:
+      matrix: ${{ needs.prepare.outputs.matrix }}
+
+  publish:
+    if: needs.prepare.outputs.unreleased
+    name: Publish
+    uses: ./.github/workflows/publish.yaml
+    needs:
+      - prepare
+      - build
+    permissions:
+      contents: write
+    secrets:
+      MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+      CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
