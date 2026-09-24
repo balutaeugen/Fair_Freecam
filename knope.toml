@@ -8,8 +8,8 @@ regex = '(?m:^ *version *= *"(?<version>.+)"$)'
 
 
 [github]
-owner = "MinecraftFreecam"
-repo = "Freecam"
+owner = "balutaeugen"
+repo = "Fair_Freecam"
 
 
 [changes]

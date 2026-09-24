@@ -95,11 +95,35 @@ jobs:
       - name: Create release branch
         run: git switch -c "release/$GITHUB_REF_NAME"
 
-      - name: Cut release
+      - name: Calculate calendar version
+        id: version
+        run: |
+          set -euo pipefail
+
+          prefix="$(date -u +%y).$((10#$(date -u +%m)))"
+          highest=-1
+
+          while IFS= read -r tag; do
+            version="${tag#v}"
+            if [[ "$version" =~ ^${prefix//./\\.}\.([0-9]+)$ ]]; then
+              index="${BASH_REMATCH[1]}"
+              (( 10#$index > highest )) && highest=$((10#$index))
+            fi
+          done < <(
+            {
+              git tag --list "v${prefix}.*"
+              yq -r '.mod.version' metadata.toml | sed 's/^/v/'
+            } | sort -u
+          )
+
+          echo "version=$prefix.$((highest + 1))" >> "$GITHUB_OUTPUT"
+
+      - name: Cut calendar-version release
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          knope bump-version --verbose
+          knope bump-version --override-version "$VERSION" --verbose
 
       - name: Create release PR
         env:
