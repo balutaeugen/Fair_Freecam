@@ -25,7 +25,7 @@ defaults:
 jobs:
   prepare:
     name: Setup
-    uses: ./.github/workflows/prepare.yaml
+    uses: $/.github/workflows/prepare.yaml
     permissions:
       contents: read
     with:
@@ -38,7 +38,7 @@ jobs:
     if: ${{ !needs.prepare.outputs.unreleased }}
 
     name: Release PR
-    uses: ./.github/workflows/create-release-pr.yaml
+    uses: $/.github/workflows/create-release-pr.yaml
     needs: prepare
     permissions:
       contents: write
@@ -53,7 +53,7 @@ jobs:
     if: needs.prepare.outputs.unreleased
 
     name: Build
-    uses: ./.github/workflows/build.yaml
+    uses: $/.github/workflows/build.yaml
     needs: prepare
     permissions:
       contents: read
@@ -63,7 +63,7 @@ jobs:
   publish:
     if: needs.prepare.outputs.unreleased
     name: Publish
-    uses: ./.github/workflows/publish.yaml
+    uses: $/.github/workflows/publish.yaml
     needs:
       - prepare
       - build

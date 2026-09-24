@@ -19,7 +19,7 @@ defaults:
 jobs:
   prepare:
     name: Setup
-    uses: ./.github/workflows/prepare.yaml
+    uses: $/.github/workflows/prepare.yaml
     permissions:
       contents: read
     with:
@@ -27,14 +27,14 @@ jobs:
 
   lint:
     name: Lint
-    uses: ./.github/workflows/lint.yaml
+    uses: $/.github/workflows/lint.yaml
     permissions:
       contents: read
       security-events: write
 
   build:
     name: Build
-    uses: ./.github/workflows/build.yaml
+    uses: $/.github/workflows/build.yaml
     needs: prepare
     permissions:
       contents: read
@@ -43,7 +43,7 @@ jobs:
 
   publish:
     name: Publish
-    uses: ./.github/workflows/publish.yaml
+    uses: $/.github/workflows/publish.yaml
     needs:
       - prepare
       - build
