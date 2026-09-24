@@ -85,8 +85,7 @@ jobs:
           sparse-checkout-cone-mode: false
           persist-credentials: false
 
-      # Checkout PR metadata separately to support pull_request_target.
-      # Trusted CI tooling will deserialize these files as arbitrary user input.
+      # Checkout PR metadata separately because CI tooling deserializes it as input.
       - name: Checkout PR metadata
         uses: actions/checkout@v7
         with:
