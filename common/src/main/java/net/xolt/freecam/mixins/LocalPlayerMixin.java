@@ -1,5 +1,6 @@
 package net.xolt.freecam.mixins;
 
+import net.minecraft.client.player.LocalPlayer;
 import net.xolt.freecam.Freecam;
 import net.xolt.freecam.config.ModConfig;
 import org.spongepowered.asm.mixin.Mixin;
@@ -10,10 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static net.xolt.freecam.Freecam.MC;
 
-import net.minecraft.client.player.LocalPlayer;
-
 @Mixin(LocalPlayer.class)
-public class LocalPlayerMixin {
+public abstract class LocalPlayerMixin extends EntityMixin {
 
     // Needed for Baritone compatibility.
     @Inject(method = "isControlledCamera", at = @At("HEAD"), cancellable = true)
@@ -24,9 +23,9 @@ public class LocalPlayerMixin {
     }
 
     // Makes rotation depend upon FreeCamera rather than the player.
-    @Inject(method = "getViewXRot", at = @At("HEAD"), cancellable = true)
-    private void onGetViewXRot(float partialTick, CallbackInfoReturnable<Float> cir) {
-        if (Freecam.isEnabled() && !Freecam.isPlayerControlEnabled() && !ModConfig.get().allowInteractionsFromPlayer()) {
+    @Override
+    protected void onGetViewXRot(float partialTick, CallbackInfoReturnable<Float> cir) {
+        if (freecam$useFreecamRotation()) {
             cir.setReturnValue(Freecam.getFreeCamera().getViewXRot(partialTick));
         }
     }
@@ -34,9 +33,14 @@ public class LocalPlayerMixin {
     // Makes rotation depend upon FreeCamera rather than the player.
     @Inject(method = "getViewYRot", at = @At("HEAD"), cancellable = true)
     private void onGetViewYRot(float partialTick, CallbackInfoReturnable<Float> cir) {
-        if (Freecam.isEnabled() && !Freecam.isPlayerControlEnabled() && !ModConfig.get().allowInteractionsFromPlayer()) {
+        if (freecam$useFreecamRotation()) {
             cir.setReturnValue(Freecam.getFreeCamera().getViewYRot(partialTick));
         }
+    }
+
+    @Unique
+    private boolean freecam$useFreecamRotation() {
+        return Freecam.isEnabled() && !Freecam.isPlayerControlEnabled() && !ModConfig.get().allowInteractionsFromPlayer();
     }
 
     @Unique

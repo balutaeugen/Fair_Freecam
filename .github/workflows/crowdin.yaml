@@ -75,6 +75,7 @@ jobs:
         with:
           # Full depth for merge logic
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Restore Crowdin cache
         uses: actions/cache/restore@v6
@@ -155,6 +156,16 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: Generate App Token
+        uses: actions/create-github-app-token@v3
+        if: vars.FREECAM_CI_APP_CLIENT_ID
+        id: app-token
+        with:
+          client-id: ${{ vars.FREECAM_CI_APP_CLIENT_ID }}
+          private-key: ${{ secrets.FREECAM_CI_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Configure git user
         run: |
           git config --global user.name "$GIT_NAME"
@@ -164,6 +175,10 @@ jobs:
         run: npm install -g @crowdin/cli
 
       - uses: actions/checkout@v7
+        with:
+          token: ${{ steps.app-token.outputs.token || github.token }}
+          persist-credentials: true
+
 
       - name: Generate summary
         id: summary
@@ -235,6 +250,16 @@ jobs:
               echo "deleted=$pr_branch" >> "$GITHUB_OUTPUT"
             fi
           else
+            echo "Documenting changes"
+            {
+              echo ---
+              echo 'default: patch'
+              echo ---
+              echo
+              echo '# Various translation updates'
+            } > .changeset/i18n_updates.md
+            git add .changeset/i18n_updates.md
+
             echo "Committing changes"
             {
               echo "chore(i18n): new translations from Crowdin"
@@ -254,6 +279,7 @@ jobs:
         id: pr
         uses: actions/github-script@v9
         with:
+          github-token: ${{ steps.app-token.outputs.token || github.token }}
           script: |
             const { readFileSync } = require("fs")
             const { owner, repo } = context.repo
@@ -300,17 +326,6 @@ jobs:
                 })
               ).data
             })()
-
-            // Add the i18n label...
-            //
-            // This would be done automatically by the PR labeling workflow, but
-            // creating the PR as github-actions[bot] means we don't trigger CI.
-            await github.rest.issues.addLabels({
-              owner,
-              repo,
-              issue_number: pr.number,
-              labels: ["i18n"],
-            })
 
             core.setOutput("number", pr.number)
             core.setOutput("url", pr.html_url)

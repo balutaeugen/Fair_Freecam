@@ -1,6 +1,20 @@
-name: Publish to Modrinth
+name: Publish
 
 on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Ref to publish
+        type: string
+        default: ${{ github.sha }}
+      dry-run:
+        description: Validate publishing without creating a release or uploading files
+        type: boolean
+        default: false
+    secrets:
+      MODRINTH_TOKEN:
+        description: Modrinth API token (required unless dry-run)
+        required: false
   release:
     types: [published]
   workflow_dispatch:
@@ -11,7 +25,7 @@ on:
         required: true
 
 concurrency:
-  group: modrinth-${{ github.event.release.tag_name || inputs.tag }}
+  group: modrinth-${{ github.event.release.tag_name || inputs.tag || inputs.ref }}
   cancel-in-progress: false
 
 permissions: {}
@@ -24,20 +38,54 @@ jobs:
   publish:
     name: Modrinth
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
-      contents: read
+      contents: write
 
     steps:
+      - name: Check out release source
+        if: github.event_name == 'workflow_call' && !inputs.dry-run
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Knope
+        if: github.event_name == 'workflow_call' && !inputs.dry-run
+        uses: knope-dev/action@v2.1.2
+        with:
+          version: 0.23.0
+
+      - name: Download build artifacts
+        if: github.event_name == 'workflow_call'
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub release
+        if: github.event_name == 'workflow_call' && !inputs.dry-run
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: knope release
+
       - name: Download GitHub release assets
+        if: github.event_name != 'workflow_call'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name || inputs.tag }}
         run: |
           mkdir artifacts
-          gh release download "$TAG" \
-            --repo "$GITHUB_REPOSITORY" \
-            --dir artifacts
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir artifacts
+
+      - name: Normalize release metadata
+        run: |
+          shopt -s nullglob
+          files=(artifacts/release-*.json)
+          if [ ${#files[@]} = 1 ]; then
+            mv "${files[0]}" artifacts/release-metadata.json
+          fi
 
       - name: Validate release assets
         run: |
@@ -46,7 +94,8 @@ jobs:
 
       - name: Publish to Modrinth
         env:
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          DRY_RUN: ${{ inputs.dry-run || '' }}
+          MODRINTH_TOKEN: ${{ inputs.dry-run && 'token' || secrets.MODRINTH_TOKEN }}
         run: |
           set -euo pipefail
 
@@ -54,38 +103,12 @@ jobs:
           project_id="$(jq -r .platforms.modrinth.project_id "$metadata")"
           mod_version="$(jq -r .mod_version "$metadata")"
           changelog="$(jq -r .changelog "$metadata")"
-          release_type="$(
-            jq -r '
-              if .release_type == "release" then "release"
-              elif .release_type == "alpha" then "alpha"
-              else "beta"
-              end
-            ' "$metadata"
-          )"
+          release_type="$(jq -r 'if .release_type == "release" then "release" elif .release_type == "alpha" then "alpha" else "beta" end' "$metadata")"
 
           while IFS= read -r version; do
             filename="$(jq -r .filename <<< "$version")"
             artifact="artifacts/$filename"
-
-            if [[ ! -f "$artifact" ]]; then
-              echo "::error::Missing release artifact: $filename"
-              exit 1
-            fi
-
-            hash="$(sha512sum "$artifact" | cut -d ' ' -f 1)"
-            status="$(
-              curl --silent --output /dev/null --write-out '%{http_code}' \
-                --header "Authorization: $MODRINTH_TOKEN" \
-                --header "User-Agent: $GITHUB_REPOSITORY release workflow" \
-                "https://api.modrinth.com/v2/version_file/$hash?algorithm=sha512"
-            )"
-            if [[ "$status" == "200" ]]; then
-              echo "::notice::$filename is already on Modrinth; skipping"
-              continue
-            elif [[ "$status" != "404" ]]; then
-              echo "::error::Modrinth hash lookup failed with HTTP $status"
-              exit 1
-            fi
+            test -f "$artifact" || { echo "::error::Missing release artifact: $filename"; exit 1; }
 
             jq -n \
               --arg project_id "$project_id" \
@@ -94,38 +117,26 @@ jobs:
               --arg changelog "$changelog" \
               --arg version_type "$release_type" \
               --arg loader "$(jq -r .loader <<< "$version")" \
-              --argjson game_versions "$(
-                jq '[.game_versions[] | select(endswith("-snapshot") | not)]' \
-                  <<< "$version"
-              )" \
-              --argjson dependencies "$(
-                jq '[
-                  .relationships[] |
-                  {
-                    project_id: .modrinth_id,
-                    dependency_type: (
-                      if .type == "bundled" then "embedded" else .type end
-                    )
-                  }
-                ]' <<< "$version"
-              )" \
-              '{
-                project_id: $project_id,
-                name: $name,
-                version_number: $version_number,
-                changelog: $changelog,
-                dependencies: $dependencies,
-                game_versions: $game_versions,
-                version_type: $version_type,
-                loaders: [$loader],
-                featured: false,
-                file_parts: ["file"],
-                primary_file: "file"
-              }' > modrinth-version.json
+              --argjson game_versions "$(jq '[.game_versions[] | select(endswith("-snapshot") | not)]' <<< "$version")" \
+              --argjson dependencies "$(jq '[.relationships[] | {project_id: .modrinth_id, dependency_type: (if .type == "bundled" then "embedded" else .type end)}]' <<< "$version")" \
+              '{project_id: $project_id, name: $name, version_number: $version_number, changelog: $changelog, dependencies: $dependencies, game_versions: $game_versions, version_type: $version_type, loaders: [$loader], featured: false, file_parts: ["file"], primary_file: "file"}' > modrinth-version.json
 
-            echo "Publishing $filename to Modrinth project $project_id"
-            curl --fail-with-body \
-              --request POST \
+            if [ -n "$DRY_RUN" ]; then
+              echo "Dry run: would publish $filename to Modrinth project $project_id"
+              continue
+            fi
+
+            hash="$(sha512sum "$artifact" | cut -d ' ' -f 1)"
+            status="$(curl --silent --output /dev/null --write-out '%{http_code}' --header "Authorization: $MODRINTH_TOKEN" --header "User-Agent: $GITHUB_REPOSITORY release workflow" "https://api.modrinth.com/v2/version_file/$hash?algorithm=sha512")"
+            if [ "$status" = 200 ]; then
+              echo "::notice::$filename is already on Modrinth; skipping"
+              continue
+            elif [ "$status" != 404 ]; then
+              echo "::error::Modrinth hash lookup failed with HTTP $status"
+              exit 1
+            fi
+
+            curl --fail-with-body --request POST \
               --header "Authorization: $MODRINTH_TOKEN" \
               --header "User-Agent: $GITHUB_REPOSITORY release workflow" \
               --form "data=@modrinth-version.json;type=application/json" \

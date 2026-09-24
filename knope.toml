@@ -1,0 +1,109 @@
+[package]
+changelog = "CHANGELOG.md"
+assets = "artifacts/*"
+
+[[package.versioned_files]]
+path = "metadata.toml"
+regex = '(?m:^ *version *= *"(?<version>.+)"$)'
+
+
+[github]
+owner = "balutaeugen"
+repo = "Fair_Freecam"
+
+
+[changes]
+ignore_conventional_commits = true
+
+
+[release_notes]
+change_templates = [
+    "### $summary (#$pr_number)\n\n$details\n\nBy $commit_author_name",
+    "### $summary ($commit_hash)\n\n$details\n\nBy $commit_author_name",
+    "- **$summary** by $commit_author_name (#$pr_number)",
+    "- **$summary** by $commit_author_name ($commit_hash)",
+    "### $summary\n\n$details",
+    "- **$summary**",
+]
+
+
+[[workflows]]
+name = "bump-version"
+help_text = "Prepare a new release (bump version, update changelog, commit changes)"
+
+[[workflows.steps]]
+type = "PrepareRelease"
+
+[[workflows.steps]]
+type = "Command"
+command = "git commit -m 'chore: release $version'"
+
+
+[[workflows]]
+name = "create-pr"
+
+[[workflows.steps]]
+type = "CreatePullRequest"
+base = "main"
+
+[workflows.steps.title]
+template = "chore: release $version"
+
+[workflows.steps.body]
+template = """
+This PR was created by Knope. Merging it will create a new release.
+
+$changelog
+"""
+
+
+[[workflows]]
+name = "release"
+help_text = "Publish the current release"
+
+[[workflows.steps]]
+type = "Release"
+
+
+[[workflows]]
+name = "document-change"
+help_text = "Create a new change file to be included in the next release"
+
+[[workflows.steps]]
+type = "CreateChangeFile"
+
+
+[[workflows]]
+name = "print-version"
+help_text = "Print the current version of the project"
+
+[[workflows.steps]]
+type = "Command"
+command = "echo '$version'"
+
+
+[[workflows]]
+name = "print-release-notes"
+help_text = "Print the current version's release notes from the project changelog"
+
+# Sadly, $changelog cannot be printed directly: Knope treats quotes in interpolated values as command argument syntax
+# https://github.com/knope-dev/knope/issues/2014
+[[workflows.steps]]
+type = "Command"
+command = """
+awk -v version='$version' '
+    /^ {0,3}#{1,2}($|[[:space:]])/ {
+        if (printing)
+            exit
+
+        if ($1 == "##" && $2 == version)
+            printing = 1
+
+        next
+    }
+
+    printing {
+        print
+    }
+' CHANGELOG.md
+"""

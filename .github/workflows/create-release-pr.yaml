@@ -1,0 +1,133 @@
+name: Create Release PR
+on:
+  workflow_call:
+    secrets:
+      FREECAM_CI_APP_PRIVATE_KEY:
+        required: false # Falls back to `github.token`, e.g. on forks
+
+jobs:
+  create:
+    name: Create
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+
+    permissions:
+      # Use the same permissions as the freecam-ci app,
+      # for testing on forks where the app is not configured
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Generate App Token
+        uses: actions/create-github-app-token@v3
+        if: vars.FREECAM_CI_APP_CLIENT_ID
+        id: app-token
+        with:
+          client-id: ${{ vars.FREECAM_CI_APP_CLIENT_ID }}
+          private-key: ${{ secrets.FREECAM_CI_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: true
+          token: ${{ steps.app-token.outputs.token || github.token }}
+
+      - name: Get GitHub App User ID
+        id: app-id
+        if: steps.app-token.outputs.app-slug
+        env:
+          APP_USERNAME: ${{ steps.app-token.outputs.app-slug }}[bot]
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: echo "app-id=$(gh api "/users/$APP_USERNAME" --jq .id)" >> "$GITHUB_OUTPUT"
+
+      - name: Configure git
+        env:
+          APP_USER_ID: ${{ steps.app-id.outputs.app-id || '41898282' }}
+          APP_USERNAME: ${{ steps.app-token.outputs.app-slug || 'github-actions' }}[bot]
+        run: |
+          git config --global user.name "$APP_USERNAME"
+          git config --global user.email "$APP_USER_ID+$APP_USERNAME@users.noreply.github.com"
+
+      - name: Install Knope
+        uses: knope-dev/action@v2.1.2
+        with:
+          # TODO: keep up to date
+          version: 0.23.0
+
+      # `PrepareRelease` throws `releases::no_release` when there are no changes documented.
+      # `allow_empty` suppresses the error, but no release is prepared.
+      # See: https://github.com/knope-dev/knope/issues/2010
+      - name: Normalize changeset
+        run: |
+          shopt -s nullglob
+          changes=( .changeset/*.md )
+          if [ ${#changes[@]} = 0 ]; then
+            printf '%s\n'  '---' 'default: invalid' '---' > .changeset/empty.md
+          fi
+
+      # `CreatePullRequest`'s `base` cannot be overridden dynamically, so patch the config file.
+      - name: Patch target branch
+        if: github.ref_name != 'main'
+        shell: python
+        run: |
+          "Replace CreatePullRequest base=main with the actual target branch"
+
+          import os
+          from pathlib import Path
+
+          old_base = 'base = "main"'
+          new_base = f'base = "{os.environ["GITHUB_REF_NAME"]}"'
+
+          cfg = Path("knope.toml")
+          content = cfg.read_text(encoding="utf-8")
+
+          count = content.count(old_base)
+          if count != 1:
+            raise SystemExit(f"::error file={cfg}::Found {count} occurrences of '{old_base}', expected exactly 1.")
+
+          new_content = content.replace(old_base, new_base, 1)
+          cfg.write_text(new_content, encoding="utf-8")
+
+      - name: Create release branch
+        run: git switch -c "release/$GITHUB_REF_NAME"
+
+      - name: Calculate calendar version
+        id: version
+        run: |
+          set -euo pipefail
+
+          prefix="$(date -u +%y).$((10#$(date -u +%m)))"
+          highest=-1
+
+          while IFS= read -r tag; do
+            version="${tag#v}"
+            if [[ "$version" =~ ^${prefix//./\\.}\.([0-9]+)$ ]]; then
+              index="${BASH_REMATCH[1]}"
+              (( 10#$index > highest )) && highest=$((10#$index))
+            fi
+          done < <(
+            {
+              git tag --list "v${prefix}.*"
+              yq -r '.mod.version' metadata.toml | sed 's/^/v/'
+            } | sort -u
+          )
+
+          echo "version=$prefix.$((highest + 1))" >> "$GITHUB_OUTPUT"
+
+      - name: Cut calendar-version release
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          knope bump-version --override-version "$VERSION" --verbose
+
+      - name: Create release PR
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+        run: |
+          git push --force --set-upstream origin "release/$GITHUB_REF_NAME"
+          knope create-pr --verbose

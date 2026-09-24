@@ -50,7 +50,16 @@ val fabricApiVersion = requireNotNull(meta.deps["fabric_api"]) {
 dependencies {
     minecraft("com.mojang:minecraft:${meta.mc}")
     loomAdapter.applyMojangMappings()
-    modImplementation(libs.fabric.loader)
+    modImplementation(libs.fabric.loader) {
+        exclude(module = "mixinextras-fabric")
+    }
+
+    // Bundle the MixinExtras we build against
+    libs.mixinextras.fabric.let { dep ->
+        implementation(dep)
+        annotationProcessor(dep)
+        include(dep)
+    }
 
     fabricApiModules.forEach { name ->
         include(modImplementation(fabricApi.module(name, fabricApiVersion))!!)
@@ -66,6 +75,8 @@ dependencies {
         exclude(module = "fabric-loader")
     }
 
+    // ModMenu renders the icon at (64px * GUI_SCALE)
+    extraResources(project(":branding", configuration = "icon_128"))
     bundle(api(project(":config"))!!)
 
     sc.node.sibling("cloth-config")?.let {
@@ -98,14 +109,14 @@ loom {
     runs {
         getByName("client") {
             client()
-            configName = "Fabric Client"
-            ideConfigGenerated(true)
+            displayName = "Fabric Client"
+            generateRunConfig = true
         }
         getByName("server") {
 //            server()
-//            configName = "Fabric Server"
-//            ideConfigGenerated(true)
-            ideConfigGenerated(false)
+//            displayName = "Fabric Server"
+//            generateRunConfig = true
+            generateRunConfig = false
         }
     }
 }
@@ -131,7 +142,10 @@ tasks.generateReleaseMetadata {
 }
 
 tasks {
-    val generateModJson by registering(FabricModJsonV1Task::class) {
+    val modJsonTask = register<FabricModJsonV1Task>("generateModJson") {
+        group = "fabric"
+        description = "Generate fabric.mod.json"
+
         outputFile = layout.buildDirectory.dir("generated/mod-json").map {
             it.file("fabric.mod.json")
         }
@@ -182,7 +196,9 @@ tasks {
     }
 
     processResources {
-        from(generateModJson)
+        from(modJsonTask)
+
+        rename("icon-128.png", "icon.png")
 
         filesMatching("freecam-fabric.mixins.json5") {
             expand("mixinCompatLevel" to "JAVA_${meta.javaVersion}")

@@ -3,16 +3,16 @@ name: Setup
 on:
   workflow_call:
     inputs:
-      changelog:
-        description: Check whether a changelog comment should be posted
+      ci_files:
+        description: Check whether files in 'ci' or '.github' were touched
         type: boolean
         default: false
-      i18n:
+      i18n_files:
         description: Check whether i18n files were touched
         type: boolean
         default: false
       release:
-        description: Check whether a release should be made
+        description: Check whether the current project version has been published on GitHub Releases
         type: boolean
         default: false
       matrix:
@@ -23,12 +23,12 @@ on:
       version:
         description: The current project version
         value: ${{ jobs.prepare.outputs.version }}
-      do_release:
-        description: Whether to publish a GitHub Release
-        value: ${{ jobs.prepare.outputs.do_release }}
-      changelog_comment:
-        description: Whether to post a PR comment displaying the current changelog
-        value: ${{ jobs.prepare.outputs.changelog_comment }}
+      unreleased:
+        description: Whether the current project version is not yet published on GitHub Releases
+        value: ${{ jobs.prepare.outputs.unreleased }}
+      ci_files:
+        description: Whether the PR touches files in 'ci' or '.github'
+        value: ${{ jobs.prepare.outputs.ci_files }}
       i18n_files:
         description: Whether the PR touches i18n files
         value: ${{ jobs.prepare.outputs.i18n_files }}
@@ -47,8 +47,8 @@ env:
   # Scopes that can be queried using `contains(env.scopes, 'scope')`
   scopes: >
     ${{ inputs.matrix && 'node' || '' }}
-    ${{ inputs.changelog && 'files' || '' }}
-    ${{ inputs.i18n && 'files' || '' }}
+    ${{ inputs.ci_files && 'files' || '' }}
+    ${{ inputs.i18n_files && 'files' || '' }}
 
 jobs:
   prepare:
@@ -62,12 +62,8 @@ jobs:
       contents: read
     outputs:
       version: ${{ steps.version.outputs.version }}
-      do_release: ${{ steps.check_release.outputs.do_release }}
-      changelog_comment: >-
-        ${{
-          steps.changed_files.outputs.changelog ||
-          steps.check_release.outputs.unreleased
-        }}
+      unreleased: ${{ steps.check_release.outputs.unreleased }}
+      ci_files: ${{ steps.changed_files.outputs.ci }}
       i18n_files: ${{ steps.changed_files.outputs.i18n }}
       matrix: ${{ steps.matrix.outputs.matrix }}
 
@@ -87,9 +83,9 @@ jobs:
             package.json
             package-lock.json
           sparse-checkout-cone-mode: false
+          persist-credentials: false
 
-      # Checkout PR metadata separately to support pull_request_target.
-      # Trusted CI tooling will deserialize these files as arbitrary user input.
+      # Checkout PR metadata separately because CI tooling deserializes it as input.
       - name: Checkout PR metadata
         uses: actions/checkout@v7
         with:
@@ -104,6 +100,7 @@ jobs:
             metadata.toml
             stonecutter.settings.toml
           sparse-checkout-cone-mode: false
+          persist-credentials: false
 
       - name: Install CI dependencies
         if: contains(env.scopes, 'node')
@@ -131,9 +128,9 @@ jobs:
               }
             )
             const files = result.repository.pullRequest.files.nodes
-            if (files.some(f => f.path === "CHANGELOG.md")) {
-              core.notice("This PR touches the changelog")
-              core.setOutput("changelog", "true")
+            if (files.some(f => f.path.startsWith("ci/") || f.path.startsWith(".github/"))) {
+              core.notice("This PR touches ci files")
+              core.setOutput("ci", "true")
             }
             if (files.some(f => f.path.startsWith("i18n/"))) {
               core.notice("This PR touches i18n files")
@@ -151,14 +148,13 @@ jobs:
 
       - name: Check whether this version is released
         id: check_release
-        if: inputs.release || inputs.changelog
+        if: inputs.release || inputs.matrix
         uses: actions/github-script@v9
         env:
           VERSION: ${{ steps.version.outputs.version }}
         with:
           script: |
             const tag = `v${process.env.VERSION}`
-            const push = context.eventName === "push"
             try {
               const { data } = await github.rest.repos.getReleaseByTag({ ...context.repo, tag })
               core.notice(`${tag} already published (${data.published_at})`)
@@ -166,14 +162,12 @@ jobs:
               if (err.status !== 404) throw err
               core.notice(`${tag} not published — creating release`)
               core.setOutput("unreleased", "true")
-              if (push) core.setOutput("do_release", "true")
             }
 
       - name: Generate build matrix
         id: matrix
         if: inputs.matrix
         env:
-          touches_changelog: ${{ steps.changed_files.outputs.changelog }}
           unreleased: ${{ steps.check_release.outputs.unreleased }}
           version: ${{ steps.version.outputs.version }}
         run: |
@@ -185,11 +179,6 @@ jobs:
           # If 'unreleased' is set, that means the version has been bumped, so do a release build.
           if [ -n "$unreleased" ]; then
             args+=( --release )
-          fi
-
-          # For PRs that touch the changelog or trigger a release, we build the changelog preview comment.
-          if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ -n "$touches_changelog$unreleased" ]; then
-              args+=( --changelog )
           fi
 
           node ci/src/build_matrix.ts "${args[@]}"
